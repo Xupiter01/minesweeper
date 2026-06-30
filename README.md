@@ -1,54 +1,37 @@
-# Minesweeper 🎮
+# Minesweeper 2P 🎮
 
-Minesweeper เกมคลาสสิกพร้อม animation และลูกเล่นสุดปัง!
+Minesweeper 2 ผู้เล่น ออนไลน์ — เล่นผ่าน WebRTC (PeerJS) ไม่ต้องมีเซิร์ฟเวอร์!
 
-- ⭐ 9×9 กับระเบิด 10 ลูก
-- 🎯 เปิดช่องแบบ flood fill
-- 🚩 ปักธงคลิกขวา
-- 💥 เอฟเฟกต์ระเบิด chain reaction
-- 🎊 Confetti ตอนชนะ
-- ✨ Particle พื้นหลัง + แสง shimmer
+## วิธีเล่น
 
-## วิธีเล่นออนไลน์ (GitHub Pages)
+**https://xupiter01.github.io/minesweeper/**
 
-1. ไปที่ https://github.com/new
-2. ตั้งชื่อ repo เช่น `minesweeper`
-3. เลือก **Public**
-4. คลิก **Create repository**
-5. อัปโหลดไฟล์ `index.html` ผ่าน **Add file → Upload files**
-6. ไปที่ **Settings → Pages**
-7. ใต้ **Source** เลือก **Deploy from a branch**
-8. เลือก **main** / **(root)** แล้วกะ **Save**
-9. รอ 1-2 นาที แล้วเล่นได้ที่:  
-   `https://<username>.github.io/<repo-name>/`
+### สร้างห้อง
+1. กด **🎮 สร้างห้องใหม่**
+2. แชร์ลิงก์หรือรหัส 4 ตัวให้เพื่อน
+3. เลือกที่นั่ง **🟦 ซ้าย** หรือ **🟥 ขวา**
+4. กดยืนยัน — เกมเริ่ม!
 
-หรือใช้ GitHub Pages Action (auto-deploy ทุกครั้งที่ push):
-- เปิด Actions tab → คลิก **Set up a workflow yourself**
-- วาง `.github/workflows/deploy.yml` ด้านล่าง
+### เข้าร่วม
+1. เปิดลิงก์ที่เพื่อนแชร์ หรือกรอกรหัส 4 ตัว
+2. รอเจ้าห้องเลือกที่นั่ง
+3. เกมเริ่มอัตโนมัติ
 
-```yaml
-name: Deploy to Pages
-on:
-  push:
-    branches: [main]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-      - uses: actions/deploy-pages@v4
-```
+## กติกา
 
-## เปิดในเครื่อง
+- คลิกซ้าย ➔ เปิดช่อง
+- คลิกขวา ➔ ปักธง
+- **ผู้เล่นแต่ละคนมีคะแนนของตัวเอง** — ทุกครั้งที่เปิดช่องได้ จะได้คะแนนตามจำนวนช่องที่เปิด
+- เหยียบระเบิด ➔ **แพ้ทันที** (คู่ต่อสู้ชนะ)
+- เปิดช่องครบ ➔ **คนที่คะแนนมากกว่าชนะ**
+- ระบบซิงค์แบบ Real-time ผ่าน WebRTC
 
-แค่เปิด `index.html` ในเบราว์เซอร์เลย
+## เทคโนโลยี
+
+- **PeerJS** — WebRTC data channel สำหรับเชื่อมต่อ P2P
+- **GitHub Pages** — โฮสต์ไฟล์ static
+- ไม่ต้องมีเซิร์ฟเวอร์แบ็กเอนด์!
+
+## Local Dev
+
+แค่เปิด `index.html` ใน browser ก็เล่นได้เลย
