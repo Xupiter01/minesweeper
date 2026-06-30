@@ -318,23 +318,26 @@ function handleData(data) {
       break;
     case 'seat_confirm':
       if (!isHost) {
-        // Guest: host sent seat assignment and initial board
         mySeat = data.seat;
         oppName = data.oppName;
-        initBoardFrom(data.board, data.mines, data.scores, data.timer, data.firstClick);
+        if (data.board) { initBoardFrom(data.board, data.mines, data.scores, data.timer, data.firstClick); }
+        else { initLocal(null, null, [0,0], 0, true); }
         startGame();
         showScreen('gameScreen');
       }
       break;
     case 'click':
       if (isHost) {
-        // Guest clicked a cell, host processes
-        processClick(data.r, data.c, data.player);
+        const _r = processClick(data.r, data.c, data.player);
+        if (_r && !gameOver) {
+          conn.send({ type: 'state_sync', board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos], score, timer, firstClick, gameOver });
+        }
       }
       break;
     case 'flag':
       if (isHost) {
         processFlag(data.r, data.c);
+        conn.send({ type: 'state_sync', board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos], score, timer, firstClick, gameOver });
       }
       break;
     case 'state_sync':
@@ -344,20 +347,26 @@ function handleData(data) {
     case 'game_over':
       gameOver = true;
       clearInterval(timerInterval);
-      $('resetBtn').textContent = data.loser === mySeat ? '💀' : '😎';
-      if (data.winner === mySeat) {
-        showToast('🎉 คุณชนะ!', 'info');
-        const pts = Math.max(1000 - timer * 5, 100);
-        showPopup('🎉 ชนะ! +' + pts);
-        createConfetti();
-      } else {
-        showToast('💀 คุณแพ้!', 'error');
-        showPopup('💀 แพ้');
+      if (data.board) {
+        board = data.board;
+        revealed = data.revealed;
+        flags = data.flags;
+        minePos = new Set(data.minePos || []);
+        score = data.scores || data.score || score;
       }
-      if (data.hitR !== undefined) {
-        revealMineExplosion(data.hitR, data.hitC, data.loser);
-      }
+      timer = data.timer != null ? data.timer : timer;
+      timerEl.textContent = String(timer).padStart(3, '0');
       renderBoard();
+      if (data.hitR !== undefined) { animateMineExplosion(data.hitR, data.hitC); }
+      $('resetBtn').textContent = data.loser === mySeat ? '💀' : '😎';
+      if (data.loser) {
+        if (data.loser === mySeat) { showToast('💀 คุณเหยียบระเบิด!', 'error'); showPopup('💀 แพ้'); }
+        else { showToast('🎉 คู่ต่อสู้เหยียบระเบิด! คุณชนะ!', 'info'); showPopup('🎉 ชนะ!'); createConfetti(); }
+      } else {
+        if (data.tie) { showToast('🤝 เสมอกัน!', 'info'); showPopup('🤝 เสมอ!'); }
+        else if (data.winner === mySeat) { showToast('🎉 คุณชนะ!', 'info'); showPopup('🎉 ชนะ!'); createConfetti(); }
+        else { showToast('😔 คุณแพ้!', 'error'); showPopup('😔 แพ้'); }
+      }
       updateScoresUI();
       break;
     case 'reset_game':
@@ -368,6 +377,9 @@ function handleData(data) {
       $('resetBtn').textContent = '🙂';
       gameOver = false;
       firstClick = false;
+      break;
+    case 'reset_request':
+      if (isHost) { resetGame(); }
       break;
     case 'opponent_left':
       showToast('👋 คู่ต่อสู้ออกจากเกม', 'error');
@@ -475,21 +487,20 @@ function processClick(r, c, playerIdx) {
   if (gameOver || revealed[r][c] || flags[r][c]) return null;
   if (firstClick) { firstClick = false; placeMines(r, c); startTimer(); }
   if (board[r][c] === -1) {
-    // Player hit a mine - this player loses
     const winnerSeat = playerIdx === 0 ? 'right' : 'left';
     const loserSeat = playerIdx === 0 ? 'left' : 'right';
     gameOver = true; clearInterval(timerInterval);
-    // Send game_over to guest
+    for (const pos of minePos) { const [mr,mc]=pos.split(',').map(Number); revealed[mr][mc]=true; }
     if (isHost) {
-      conn.send({ type: 'game_over', winner: winnerSeat, loser: loserSeat, hitR: r, hitC: c, scores: score });
+      conn.send({ type: 'game_over', winner: winnerSeat, loser: loserSeat, hitR: r, hitC: c, scores: score, board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos] });
     }
-    revealMineExplosion(r, c, loserSeat);
     renderBoard();
+    animateMineExplosion(r, c);
     updateScoresUI();
     $('resetBtn').textContent = '💀';
     const isMe = (playerIdx === 0 && mySeat === 'left') || (playerIdx === 1 && mySeat === 'right');
     if (isMe) { showToast('💀 คุณเหยียบระเบิด!', 'error'); showPopup('💀 แพ้'); }
-    else { showToast('🎉 คู่ต่อสู้เหยียบระเบิด! คุณชนะ!', 'info'); const pts=Math.max(1000-timer*5,100); showPopup('🎉 ชนะ! +'+pts); createConfetti(); }
+    else { showToast('🎉 คู่ต่อสู้เหยียบระเบิด! คุณชนะ!', 'info'); showPopup('🎉 ชนะ!'); createConfetti(); }
     return null;
   }
   const seen = new Set();
@@ -522,7 +533,7 @@ function checkWin(playerIdx) {
     const winnerIdx = score[0] > score[1] ? 0 : (score[1] > score[0] ? 1 : -1);
     const isTie = winnerIdx === -1;
     if (isHost) {
-      conn.send({ type: 'game_over', winner: winnerIdx === 0 ? 'left' : 'right', tie: isTie, scores: score });
+      conn.send({ type: 'game_over', winner: winnerIdx === 0 ? 'left' : 'right', tie: isTie, scores: score, board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos] });
     }
     if (isTie) { showToast('🤝 เสมอกัน!', 'info'); showPopup('🤝 เสมอ!'); }
     else {
@@ -620,7 +631,7 @@ function animateReveal() {
   });
 }
 
-function revealMineExplosion(r, c, loserSeat) {
+function animateMineExplosion(hitR, hitC) {
   gameEl.classList.remove('shake'); void gameEl.offsetWidth; gameEl.classList.add('shake');
   let idx = 0;
   for (const pos of minePos) {
@@ -628,12 +639,8 @@ function revealMineExplosion(r, c, loserSeat) {
     setTimeout(() => {
       const el = document.querySelector(`[data-r="${mr}"][data-c="${mc}"]`);
       if (!el) return;
-      if (mr === r && mc === c) {
-        el.classList.remove('hidden','flag'); el.classList.add('revealed','mine-hit'); el.textContent = '💣';
-        explodeParticles(el);
-      } else if (!el.classList.contains('revealed')) {
-        el.classList.remove('hidden','flag'); el.classList.add('revealed','mine'); el.textContent = '💣';
-      }
+      if (mr === hitR && mc === hitC) { el.classList.add('mine-hit'); explodeParticles(el); }
+      else { el.classList.add('mine'); }
     }, idx * 70);
     idx++;
   }
