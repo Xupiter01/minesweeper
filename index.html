@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Minesweeper</title>
+<title>Minesweeper 2P</title>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.1/dist/peerjs.min.js"></script>
 <style>
 * { box-sizing: border-box; user-select: none; }
 body {
@@ -24,347 +25,570 @@ body {
   90% { opacity: 0.3; }
   100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
 }
-.game {
-  position: relative; z-index: 1;
-  background: rgba(22, 33, 62, 0.85); backdrop-filter: blur(12px);
-  padding: 24px; border-radius: 20px;
+.screen {
+  display: none; position: relative; z-index: 1; width: 100%; max-width: 560px;
+}
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* Lobby */
+.lobby {
+  background: rgba(22, 33, 62, 0.9); backdrop-filter: blur(12px);
+  padding: 40px; border-radius: 20px; text-align: center;
   box-shadow: 0 0 60px rgba(233, 69, 96, 0.2), 0 8px 32px rgba(0,0,0,0.5);
-  border: 1px solid rgba(233, 69, 96, 0.15);
-  animation: gameIn 0.5s ease;
+  border: 1px solid rgba(233, 69, 96, 0.15); animation: gameIn 0.5s ease;
+  width: 100%;
 }
-@keyframes gameIn {
-  0% { transform: scale(0.8) translateY(40px); opacity: 0; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+@keyframes gameIn { 0% { transform: scale(0.8) translateY(40px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+.lobby h1 { color: #e94560; margin: 0 0 8px 0; font-size: 32px; }
+.lobby p { color: #8899aa; margin: 0 0 24px 0; font-size: 14px; }
+.lobby .btn {
+  display: block; width: 100%; padding: 14px; border: none; border-radius: 12px;
+  font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 12px;
 }
-.header {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px;
+.btn-primary { background: linear-gradient(135deg, #e94560, #c73652); color: #fff; box-shadow: 0 4px 15px rgba(233,69,96,0.3); }
+.btn-primary:hover { transform: scale(1.03); box-shadow: 0 6px 25px rgba(233,69,96,0.5); }
+.btn-secondary { background: rgba(15, 52, 96, 0.8); color: #4ecca3; border: 1px solid rgba(78,204,163,0.3) !important; }
+.btn-secondary:hover { transform: scale(1.03); background: rgba(15, 52, 96, 1); }
+.lobby .divider { color: #556; margin: 16px 0; font-size: 13px; display: flex; align-items: center; gap: 12px; }
+.lobby .divider::before, .lobby .divider::after { content: ''; flex: 1; height: 1px; background: #334; }
+.join-row { display: flex; gap: 8px; }
+.join-row input {
+  flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #334; background: #0a0a1a;
+  color: #fff; font-size: 18px; text-align: center; letter-spacing: 4px; text-transform: uppercase; font-weight: bold;
 }
+.join-row input:focus { outline: none; border-color: #e94560; }
+.join-row .btn { width: auto; padding: 14px 24px; margin-bottom: 0; }
+
+/* Waiting */
+.waiting { text-align: center; padding: 40px; }
+.waiting .room-code { font-size: 48px; letter-spacing: 8px; color: #4ecca3; font-weight: bold; font-family: monospace; margin: 16px 0; text-shadow: 0 0 30px rgba(78,204,163,0.3); }
+.waiting .status { color: #8899aa; font-size: 16px; margin: 8px 0; }
+.waiting .spinner { width: 40px; height: 40px; border: 3px solid #334; border-top: 3px solid #e94560; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.waiting .share-link { margin-top: 16px; padding: 12px; background: #0a0a1a; border-radius: 8px; color: #556; font-size: 13px; word-break: break-all; cursor: pointer; border: 1px solid #334; }
+.waiting .share-link span { color: #4ecca3; }
+
+/* Seat Select */
+.seat-select { display: flex; gap: 16px; margin: 20px 0; }
+.seat-btn {
+  flex: 1; padding: 24px; border-radius: 16px; border: 2px solid #334; cursor: pointer;
+  text-align: center; transition: 0.2s; background: rgba(15, 52, 96, 0.4);
+}
+.seat-btn:hover { border-color: #4ecca3; transform: scale(1.03); }
+.seat-btn.selected { border-color: #4ecca3; background: rgba(78,204,163,0.1); box-shadow: 0 0 20px rgba(78,204,163,0.2); }
+.seat-btn .icon { font-size: 40px; margin-bottom: 8px; }
+.seat-btn .label { color: #fff; font-weight: bold; font-size: 16px; }
+.seat-btn .desc { color: #8899aa; font-size: 12px; margin-top: 4px; }
+
+/* Game */
+.game-container {
+  position: relative; z-index: 1;
+  background: rgba(22, 33, 62, 0.9); backdrop-filter: blur(12px);
+  padding: 20px; border-radius: 20px;
+  box-shadow: 0 0 60px rgba(233, 69, 96, 0.2), 0 8px 32px rgba(0,0,0,0.5);
+  border: 1px solid rgba(233, 69, 96, 0.15); animation: gameIn 0.5s ease;
+}
+.players {
+  display: flex; gap: 12px; margin-bottom: 12px;
+}
+.player-card {
+  flex: 1; padding: 10px 14px; border-radius: 12px; text-align: center;
+  border: 2px solid #334; position: relative; transition: 0.3s;
+}
+.player-card.active-player { border-color: #ffd93d; box-shadow: 0 0 20px rgba(255,217,61,0.2); }
+.player-card .seat-icon { font-size: 20px; }
+.player-card .pname { font-weight: bold; font-size: 14px; margin: 2px 0; }
+.player-card .pscore { font-size: 22px; font-weight: bold; font-family: monospace; }
+.player-card.left-card { border-color: #3b82f6; }
+.player-card.left-card .pscore { color: #3b82f6; }
+.player-card.right-card { border-color: #e94560; }
+.player-card.right-card .pscore { color: #e94560; }
+.player-card .you-badge { font-size: 10px; background: #ffd93d; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; display: inline-block; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px; }
 .header > div {
-  background: rgba(15, 52, 96, 0.8); color: #e94560; padding: 8px 16px; border-radius: 10px;
-  font-size: 26px; font-weight: bold; font-family: 'Courier New', monospace;
-  min-width: 72px; text-align: center; border: 1px solid rgba(233, 69, 96, 0.2);
+  background: rgba(15, 52, 96, 0.8); color: #e94560; padding: 6px 12px; border-radius: 10px;
+  font-size: 22px; font-weight: bold; font-family: 'Courier New', monospace;
+  min-width: 64px; text-align: center; border: 1px solid rgba(233, 69, 96, 0.2);
   position: relative; overflow: hidden;
 }
-.header > div::after {
-  content: ''; position: absolute; inset: 0; border-radius: 10px;
-  background: linear-gradient(90deg, transparent, rgba(233,69,96,0.1), transparent);
-  transform: translateX(-100%); animation: shimmer 3s infinite;
-}
-@keyframes shimmer { 100% { transform: translateX(100%); } }
 .pulse { animation: pulseAnim 0.3s ease; }
-@keyframes pulseAnim {
-  0% { transform: scale(1); } 50% { transform: scale(1.15); color: #4ecca3; } 100% { transform: scale(1); }
-}
-button {
-  background: linear-gradient(135deg, #e94560, #c73652); color: #fff; border: none;
-  padding: 10px 24px; border-radius: 10px; font-size: 22px; cursor: pointer; font-weight: bold;
-  transition: 0.2s; box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
-}
-button:hover { transform: scale(1.1) rotate(-5deg); box-shadow: 0 6px 25px rgba(233, 69, 96, 0.5); }
-button:active { transform: scale(0.95); }
-.board { display: grid; gap: 3px; }
+@keyframes pulseAnim { 0% { transform: scale(1); } 50% { transform: scale(1.15); color: #4ecca3; } 100% { transform: scale(1); } }
+.board { display: grid; gap: 3px; justify-content: center; }
 .cell {
-  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-  font-weight: bold; font-size: 17px; border-radius: 6px; cursor: pointer;
+  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 16px; border-radius: 5px; cursor: pointer;
   transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 .cell.hidden { background: #0f3460; color: #fff; }
-.cell.hidden:hover {
-  background: #1a5a8a; transform: scale(1.08); z-index: 2;
-  box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
-}
-.cell.revealed {
-  background: rgba(26, 26, 64, 0.9);
-  animation: revealAnim 0.3s ease;
-}
-@keyframes revealAnim {
-  0% { transform: scale(0.5) rotateX(90deg); opacity: 0; }
-  60% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1) rotateX(0deg); }
-}
-.cell.flag {
-  animation: flagAnim 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-  color: #e94560;
-}
-@keyframes flagAnim {
-  0% { transform: scale(0); }
-  60% { transform: scale(1.25); }
-  100% { transform: scale(1); }
-}
-.cell.mine {
-  animation: mineAnim 0.5s ease;
-  background: #e94560 !important; box-shadow: 0 0 30px rgba(233,69,96,0.6);
-}
-@keyframes mineAnim {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.4); box-shadow: 0 0 50px rgba(233,69,96,0.9); }
-  60% { transform: scale(0.9); }
-  100% { transform: scale(1); }
-}
-.cell.mine-hit {
-  background: #ff0000 !important; box-shadow: 0 0 60px rgba(255,0,0,0.9); z-index: 3;
-  animation: hitAnim 0.6s ease;
-}
-@keyframes hitAnim {
-  0% { transform: scale(1); }
-  20% { transform: scale(1.6); }
-  40% { transform: scale(0.85); }
-  100% { transform: scale(1); }
-}
-.shake {
-  animation: shakeAnim 0.5s ease;
-}
-@keyframes shakeAnim {
-  0%, 100% { transform: translateX(0); }
-  15% { transform: translateX(-8px) rotate(-1deg); }
-  30% { transform: translateX(8px) rotate(1deg); }
-  45% { transform: translateX(-5px); }
-  60% { transform: translateX(5px); }
-  75% { transform: translateX(-2px); }
-  90% { transform: translateX(2px); }
-}
-.win-cell {
-  animation: winAnim 0.6s ease forwards;
-}
-@keyframes winAnim {
-  0% { box-shadow: 0 0 0 rgba(78,204,163,0); }
-  50% { box-shadow: 0 0 25px rgba(78,204,163,0.5); transform: scale(1.08); background: rgba(78,204,163,0.15) !important; }
-  100% { box-shadow: 0 0 8px rgba(78,204,163,0.2); transform: scale(1); }
-}
+.cell.hidden:hover { background: #1a5a8a; transform: scale(1.08); z-index: 2; box-shadow: 0 0 20px rgba(233, 69, 96, 0.3); }
+.cell.revealed { background: rgba(26, 26, 64, 0.9); animation: revealAnim 0.3s ease; }
+@keyframes revealAnim { 0% { transform: scale(0.5) rotateX(90deg); opacity: 0; } 60% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1) rotateX(0deg); } }
+.cell.flag { animation: flagAnim 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55); color: #e94560; }
+@keyframes flagAnim { 0% { transform: scale(0); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.cell.mine { animation: mineAnim 0.5s ease; background: #e94560 !important; box-shadow: 0 0 30px rgba(233,69,96,0.6); }
+@keyframes mineAnim { 0% { transform: scale(1); } 30% { transform: scale(1.4); } 60% { transform: scale(0.9); } 100% { transform: scale(1); } }
+.cell.mine-hit { background: #ff0000 !important; box-shadow: 0 0 50px rgba(255,0,0,0.9); z-index: 3; animation: hitAnim 0.6s ease; }
+@keyframes hitAnim { 0% { transform: scale(1); } 20% { transform: scale(1.6); } 40% { transform: scale(0.85); } 100% { transform: scale(1); } }
+.shake { animation: shakeAnim 0.5s ease; }
+@keyframes shakeAnim { 0%,100% { transform: translateX(0); } 15% { transform: translateX(-8px) rotate(-1deg); } 30% { transform: translateX(8px) rotate(1deg); } 45% { transform: translateX(-5px); } 60% { transform: translateX(5px); } 75% { transform: translateX(-2px); } 90% { transform: translateX(2px); } }
+.win-cell { animation: winAnim 0.6s ease forwards; }
+@keyframes winAnim { 50% { box-shadow: 0 0 25px rgba(78,204,163,0.5); transform: scale(1.08); background: rgba(78,204,163,0.15) !important; } 100% { box-shadow: 0 0 8px rgba(78,204,163,0.2); transform: scale(1); } }
 .num-pop { animation: numPop 0.3s ease; }
-@keyframes numPop {
-  0% { transform: scale(0); color: #fff; }
-  60% { transform: scale(1.4); }
-  100% { transform: scale(1); }
+@keyframes numPop { 0% { transform: scale(0); color: #fff; } 60% { transform: scale(1.4); } 100% { transform: scale(1); } }
+.confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
+.confetti { position: absolute; width: 10px; height: 10px; top: -10px; animation: confettiFall linear forwards; }
+@keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(105vh) rotate(var(--rot)); opacity: 0; } }
+.popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 36px; font-weight: bold; color: #4ecca3; pointer-events: none; text-shadow: 0 0 30px rgba(78,204,163,0.5); z-index: 10; animation: popupAnim 1.2s ease forwards; text-align: center; }
+@keyframes popupAnim { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } 60% { transform: translate(-50%, -70%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -130%) scale(0.8); opacity: 0; } }
+.pending { opacity: 0.5 !important; }
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 200;
+  padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px;
+  animation: toastIn 0.3s ease; pointer-events: none; text-align: center;
 }
-.confetti-container {
-  position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden;
-}
-.confetti {
-  position: absolute; width: 10px; height: 10px; top: -10px;
-  animation: confettiFall linear forwards;
-}
-@keyframes confettiFall {
-  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(105vh) rotate(var(--rot)); opacity: 0; }
-}
-.popup {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  font-size: 40px; font-weight: bold; color: #4ecca3; pointer-events: none;
-  text-shadow: 0 0 30px rgba(78,204,163,0.5); z-index: 10;
-  animation: popupAnim 1.2s ease forwards;
-}
-@keyframes popupAnim {
-  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-  25% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
-  60% { transform: translate(-50%, -70%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -130%) scale(0.8); opacity: 0; }
-}
+.toast.info { background: rgba(15,52,96,0.95); color: #4ecca3; border: 1px solid rgba(78,204,163,0.3); }
+.toast.error { background: rgba(233,69,96,0.95); color: #fff; border: 1px solid rgba(233,69,96,0.3); }
+@keyframes toastIn { 0% { transform: translateX(-50%) translateY(-20px); opacity: 0; } 100% { transform: translateX(-50%) translateY(0); opacity: 1; } }
 </style>
 </head>
 <body>
 <div class="bg-particles" id="bgParticles"></div>
-<div class="game" id="gameEl">
-  <div class="header">
-    <div id="mineCount">000</div>
-    <button id="reset">🙂</button>
-    <div id="timer">000</div>
+
+<!-- LOBBY -->
+<div class="screen active" id="lobbyScreen">
+  <div class="lobby">
+    <h1>💣 Minesweeper</h1>
+    <p>เล่น 2 ผู้เล่นผ่านอินเทอร์เน็ต</p>
+    <button class="btn btn-primary" onclick="createRoom()">🎮 สร้างห้องใหม่</button>
+    <div class="divider">หรือ</div>
+    <div class="join-row">
+      <input id="roomCodeInput" placeholder="รหัสห้อง" maxlength="4" onkeydown="if(event.key==='Enter') joinRoom()">
+      <button class="btn btn-primary" onclick="joinRoom()">เข้าร่วม</button>
+    </div>
   </div>
-  <div id="board" class="board"></div>
+</div>
+
+<!-- WAITING -->
+<div class="screen" id="waitingScreen">
+  <div class="lobby waiting" style="width:100%">
+    <div style="color:#8899aa;font-size:14px;margin-bottom:8px;">🏠 รหัสห้องของคุณ</div>
+    <div class="room-code" id="roomCodeDisplay">----</div>
+    <div class="spinner"></div>
+    <div class="status" id="waitStatus">กำลังรอผู้เล่นคนที่สอง...</div>
+    <div class="share-link" id="shareLink" onclick="copyLink()">📋 คลิกเพื่อคัดลอกลิงก์: <span id="shareUrl">กำลังโหลด...</span></div>
+  </div>
+</div>
+
+<!-- SEAT SELECT -->
+<div class="screen" id="seatScreen">
+  <div class="lobby" style="width:100%">
+    <h2 style="color:#fff;margin:0 0 8px 0;">เลือกที่นั่ง</h2>
+    <p style="color:#8899aa;margin:0 0 16px 0;">ฝ่ายซ้ายเริ่มก่อน</p>
+    <div class="seat-select">
+      <div class="seat-btn" id="seatLeft" onclick="selectSeat('left')">
+        <div class="icon">🟦</div>
+        <div class="label">ฝั่งซ้าย</div>
+        <div class="desc">เริ่มก่อน</div>
+      </div>
+      <div class="seat-btn" id="seatRight" onclick="selectSeat('right')">
+        <div class="icon">🟥</div>
+        <div class="label">ฝั่งขวา</div>
+        <div class="desc">เริ่มทีหลัง</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="seatConfirmBtn" disabled onclick="confirmSeat()">ยืนยันที่นั่ง</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="gameScreen" style="width:100%;max-width:560px">
+  <div class="game-container" id="gameEl">
+    <div class="players">
+      <div class="player-card left-card" id="cardLeft">
+        <div class="seat-icon">🟦</div>
+        <div class="pname" id="nameLeft">ฝั่งซ้าย</div>
+        <div class="pscore" id="scoreLeft">0</div>
+      </div>
+      <div class="player-card right-card" id="cardRight">
+        <div class="seat-icon">🟥</div>
+        <div class="pname" id="nameRight">ฝั่งขวา</div>
+        <div class="pscore" id="scoreRight">0</div>
+      </div>
+    </div>
+    <div class="header">
+      <div id="mineCount">000</div>
+      <button id="resetBtn" style="padding:6px 18px;font-size:18px;" onclick="resetGame()">🙂</button>
+      <div id="timer">000</div>
+    </div>
+    <div id="board" class="board"></div>
+  </div>
 </div>
 
 <script>
 const COLS = 9, ROWS = 9, MINES = 10;
-let board, revealed, flags, gameOver, minePos, firstClick, timer, timerInterval;
-const boardEl = document.getElementById('board');
-const mineCountEl = document.getElementById('mineCount');
-const timerEl = document.getElementById('timer');
-const resetBtn = document.getElementById('reset');
-const gameEl = document.getElementById('gameEl');
 const colors = ['', '#4ecca3', '#3b82f6', '#e94560', '#9b59b6', '#1abc9c', '#f39c12', '#e74c3c', '#95a5a6'];
 
-function createBgParticles() {
-  const c = document.getElementById('bgParticles');
-  for (let i = 0; i < 50; i++) {
-    const p = document.createElement('div'); p.className = 'bg-particle';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
-    p.style.animationDuration = (10 + Math.random() * 20) + 's';
-    p.style.animationDelay = (Math.random() * 15) + 's';
-    c.appendChild(p);
+// --- State ---
+let board, revealed, flags, minePos;
+let gameOver = false, firstClick = true, timer = 0, timerInterval;
+let score = [0, 0]; // 0=left, 1=right
+let mySeat = null; // 'left' or 'right'
+let isHost = false;
+let peer = null;
+let conn = null;
+let roomCode = null;
+let oppName = 'ฝั่งตรงข้าม';
+let myName = '';
+
+// --- DOM refs ---
+const $ = id => document.getElementById(id);
+const boardEl = $('board');
+const mineCountEl = $('mineCount');
+const timerEl = $('timer');
+const gameEl = $('gameEl');
+
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
+
+// --- Background ---
+(function(){ const c = $('bgParticles'); for(let i=0;i<40;i++){ const p=document.createElement('div');p.className='bg-particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(1+Math.random()*3)+'px';p.style.animationDuration=(10+Math.random()*20)+'s';p.style.animationDelay=(Math.random()*15)+'s';c.appendChild(p); } })();
+
+// ==================== LOBBY ====================
+function generateCode() { const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)]; return c; }
+
+async function createRoom() {
+  roomCode = generateCode();
+  const peerId = 'ms2p-' + roomCode;
+  isHost = true;
+  showScreen('waitingScreen');
+  $('roomCodeDisplay').textContent = roomCode;
+  const url = window.location.origin + window.location.pathname + '?room=' + roomCode;
+  $('shareUrl').textContent = url;
+  $('waitStatus').textContent = 'กำลังรอผู้เล่นคนที่สอง...';
+
+  try {
+    peer = new Peer(peerId);
+    await new Promise((res, rej) => { peer.on('open', res); peer.on('error', rej); setTimeout(() => rej('timeout'), 10000); });
+    peer.on('connection', incoming => {
+      conn = incoming;
+      conn.on('open', () => {
+        conn.on('data', handleData);
+        // Go to seat selection as host
+        showScreen('seatScreen');
+      });
+    });
+  } catch (e) {
+    showScreen('lobbyScreen');
+    showToast('ไม่สามารถสร้างห้องได้ (peerId ซ้ำหรือ timeout)', 'error');
   }
 }
-createBgParticles();
 
-function init() {
-  board = []; revealed = []; flags = []; gameOver = false; minePos = new Set(); firstClick = true;
-  clearInterval(timerInterval); timer = 0; timerEl.textContent = '000';
-  for (let r = 0; r < ROWS; r++) {
-    board[r] = []; revealed[r] = []; flags[r] = [];
-    for (let c = 0; c < COLS; c++) { board[r][c] = 0; revealed[r][c] = false; flags[r][c] = false; }
+async function joinRoom() {
+  let code = $('roomCodeInput').value.trim().toUpperCase();
+  if (code.length !== 4) { showToast('กรุณากรอกรหัส 4 ตัว', 'error'); return; }
+  roomCode = code;
+  isHost = false;
+  showScreen('waitingScreen');
+  $('roomCodeDisplay').textContent = code;
+  $('waitStatus').textContent = 'กำลังเชื่อมต่อ...';
+  $('shareLink').style.display = 'none';
+
+  try {
+    peer = new Peer();
+    await new Promise((res, rej) => { peer.on('open', res); peer.on('error', rej); setTimeout(() => rej('timeout'), 10000); });
+    const hostId = 'ms2p-' + code;
+    conn = peer.connect(hostId, { reliable: true });
+    await new Promise((res, rej) => { conn.on('open', res); conn.on('error', rej); setTimeout(() => rej('timeout'), 15000); });
+    conn.on('data', handleData);
+    conn.send({ type: 'join' });
+  } catch (e) {
+    showScreen('lobbyScreen');
+    showToast('ไม่สามารถเชื่อมต่อห้องได้ (รหัสผิดหรือเจ้าห้องออก)', 'error');
   }
-  render();
 }
 
+// ==================== MESSAGING ====================
+function handleData(data) {
+  switch (data.type) {
+    case 'join':
+      // Host receives join request
+      if (isHost) {
+        // Host goes to seat selection
+        showScreen('seatScreen');
+      }
+      break;
+    case 'seat_confirm':
+      if (!isHost) {
+        // Guest: host sent seat assignment and initial board
+        mySeat = data.seat;
+        oppName = data.oppName;
+        initBoardFrom(data.board, data.mines, data.scores, data.timer, data.firstClick);
+        startGame();
+        showScreen('gameScreen');
+      }
+      break;
+    case 'click':
+      if (isHost) {
+        // Guest clicked a cell, host processes
+        processClick(data.r, data.c, data.player);
+      }
+      break;
+    case 'flag':
+      if (isHost) {
+        processFlag(data.r, data.c);
+      }
+      break;
+    case 'state_sync':
+      // Guest receives full state from host
+      applyState(data);
+      break;
+    case 'game_over':
+      gameOver = true;
+      clearInterval(timerInterval);
+      $('resetBtn').textContent = data.loser === mySeat ? '💀' : '😎';
+      if (data.winner === mySeat) {
+        showToast('🎉 คุณชนะ!', 'info');
+        const pts = Math.max(1000 - timer * 5, 100);
+        showPopup('🎉 ชนะ! +' + pts);
+        createConfetti();
+      } else {
+        showToast('💀 คุณแพ้!', 'error');
+        showPopup('💀 แพ้');
+      }
+      if (data.hitR !== undefined) {
+        revealMineExplosion(data.hitR, data.hitC, data.loser);
+      }
+      renderBoard();
+      updateScoresUI();
+      break;
+    case 'reset_game':
+      // Guest receives reset
+      initLocal(data.board, data.mines, data.scores, data.timer, true);
+      renderBoard();
+      updateScoresUI();
+      $('resetBtn').textContent = '🙂';
+      gameOver = false;
+      firstClick = false;
+      break;
+    case 'opponent_left':
+      showToast('👋 คู่ต่อสู้ออกจากเกม', 'error');
+      gameOver = true;
+      clearInterval(timerInterval);
+      break;
+  }
+}
+
+// ==================== SEAT SELECTION ====================
+let selectedSeat = null;
+function selectSeat(seat) {
+  selectedSeat = seat;
+  document.querySelectorAll('.seat-btn').forEach(b => b.classList.remove('selected'));
+  $(seat === 'left' ? 'seatLeft' : 'seatRight').classList.add('selected');
+  $('seatConfirmBtn').disabled = false;
+}
+function confirmSeat() {
+  if (!selectedSeat) return;
+  mySeat = selectedSeat;
+  myName = 'ฉัน';
+  if (isHost) {
+    // Host chooses seat, guest gets the other
+    const guestSeat = mySeat === 'left' ? 'right' : 'left';
+    conn.send({ type: 'seat_confirm', seat: guestSeat, oppName: myName, board: null, mines: [], scores: [0, 0], timer: 0, firstClick: true });
+    // Prepare board
+    initLocal(null, null, [0,0], 0, true);
+    startGame();
+    showScreen('gameScreen');
+  }
+}
+
+// ==================== GAME INIT ====================
+function initLocal(existingBoard, existingMines, scores, t, fc) {
+  if (existingBoard) {
+    board = existingBoard; revealed = []; flags = [];
+    for (let r = 0; r < ROWS; r++) { revealed[r] = []; flags[r] = []; for (let c = 0; c < COLS; c++) { revealed[r][c] = false; flags[r][c] = false; } }
+    minePos = new Set(existingMines);
+  } else {
+    board = []; revealed = []; flags = []; minePos = new Set();
+    for (let r = 0; r < ROWS; r++) { board[r] = []; revealed[r] = []; flags[r] = []; for (let c = 0; c < COLS; c++) { board[r][c] = 0; revealed[r][c] = false; flags[r][c] = false; } }
+  }
+  score = scores || [0, 0];
+  timer = t || 0;
+  timerEl.textContent = String(timer).padStart(3, '0');
+  firstClick = fc;
+  gameOver = false;
+  clearInterval(timerInterval);
+  if (!fc) {
+    timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
+  }
+}
+
+function initBoardFrom(bd, mines, scores, t, fc) {
+  board = bd; minePos = new Set(mines); score = scores; timer = t; firstClick = fc;
+  revealed = []; flags = [];
+  for (let r = 0; r < ROWS; r++) { revealed[r] = []; flags[r] = []; for (let c = 0; c < COLS; c++) { revealed[r][c] = false; flags[r][c] = false; } }
+}
+
+function startGame() {
+  // Setup UI
+  $('nameLeft').textContent = mySeat === 'left' ? 'ฉัน 👈' : (isHost ? 'คุณ' : oppName);
+  $('nameRight').textContent = mySeat === 'right' ? 'ฉัน 👈' : (isHost ? 'คุณ' : oppName);
+  $('scoreLeft').textContent = '0';
+  $('scoreRight').textContent = '0';
+  $('resetBtn').textContent = '🙂';
+  updateMineCount();
+  if (!isHost && firstClick) {
+    // Guest needs to wait for host to place mines on first click
+    renderBoard();
+  }
+}
+
+// ==================== GAME LOGIC ====================
 function placeMines(exR, exC) {
   let placed = 0;
   while (placed < MINES) {
     const r = Math.floor(Math.random() * ROWS);
     const c = Math.floor(Math.random() * COLS);
-    if (board[r][c] === -1 || (Math.abs(r - exR) <= 1 && Math.abs(c - exC) <= 1)) continue;
-    board[r][c] = -1; minePos.add(r + ',' + c); placed++;
+    if (board[r][c] === -1 || (Math.abs(r-exR)<=1 && Math.abs(c-exC)<=1)) continue;
+    board[r][c] = -1; minePos.add(r+','+c); placed++;
   }
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (board[r][c] === -1) continue;
-      let cnt = 0;
-      for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-          const nr = r + dr, nc = c + dc;
-          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === -1) cnt++;
-        }
-      }
-      board[r][c] = cnt;
-    }
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    if (board[r][c] === -1) continue;
+    let cnt = 0;
+    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) { const nr=r+dr,nc=c+dc; if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&board[nr][nc]===-1) cnt++; }
+    board[r][c] = cnt;
   }
 }
 
-function floodFill(r, c) {
-  if (r < 0 || r >= ROWS || c < 0 || c >= COLS || revealed[r][c] || flags[r][c]) return;
+function floodFill(r, c, seen) {
+  if (r<0||r>=ROWS||c<0||c>=COLS||revealed[r][c]||flags[r][c]) return 0;
+  const key = r+','+c;
+  if (seen.has(key)) return 0;
+  seen.add(key);
   revealed[r][c] = true;
+  let count = 1;
   if (board[r][c] === 0) {
-    for (let dr = -1; dr <= 1; dr++)
-      for (let dc = -1; dc <= 1; dc++)
-        floodFill(r + dr, c + dc);
+    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) count += floodFill(r+dr, c+dc, seen);
   }
+  return count;
 }
 
-function animateReveal() {
-  const cells = boardEl.querySelectorAll('.cell.revealed');
-  cells.forEach((el, i) => {
-    el.style.animation = 'none';
-    void el.offsetWidth;
-    el.style.animation = `revealAnim 0.3s ease forwards`;
-    el.style.animationDelay = (i * 12) + 'ms';
-    const num = el.querySelector('.num');
-    if (num) { num.style.animation = 'none'; void num.offsetWidth; num.style.animation = 'numPop 0.3s ease'; }
-  });
-}
-
-function handleClick(e, r, c) {
-  e.stopPropagation();
-  if (gameOver || revealed[r][c] || flags[r][c]) return;
-
-  if (firstClick) {
-    firstClick = false; placeMines(r, c);
-    timerInterval = setInterval(() => {
-      timer++; timerEl.textContent = String(timer).padStart(3, '0');
-      timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse');
-    }, 1000);
-  }
-
+function processClick(r, c, playerIdx) {
+  if (gameOver || revealed[r][c] || flags[r][c]) return null;
+  if (firstClick) { firstClick = false; placeMines(r, c); startTimer(); }
   if (board[r][c] === -1) {
+    // Player hit a mine - this player loses
+    const winnerSeat = playerIdx === 0 ? 'right' : 'left';
+    const loserSeat = playerIdx === 0 ? 'left' : 'right';
     gameOver = true; clearInterval(timerInterval);
-    gameEl.classList.remove('shake'); void gameEl.offsetWidth; gameEl.classList.add('shake');
-    let idx = 0;
-    for (const pos of minePos) {
-      const [mr, mc] = pos.split(',').map(Number);
-      setTimeout(() => {
-        revealed[mr][mc] = true;
-        const el = document.querySelector(`[data-r="${mr}"][data-c="${mc}"]`);
-        if (!el) return;
-        if (mr === r && mc === c) {
-          el.classList.remove('hidden', 'flag'); el.classList.add('revealed', 'mine-hit'); el.textContent = '💣';
-          explodeParticles(el);
-        } else if (!el.classList.contains('revealed')) {
-          el.classList.remove('hidden', 'flag'); el.classList.add('revealed', 'mine'); el.textContent = '💣';
-        }
-      }, idx * 70);
-      idx++;
+    // Send game_over to guest
+    if (isHost) {
+      conn.send({ type: 'game_over', winner: winnerSeat, loser: loserSeat, hitR: r, hitC: c, scores: score });
     }
-    resetBtn.textContent = '💀';
-    setTimeout(render, idx * 70 + 150);
-    return;
+    revealMineExplosion(r, c, loserSeat);
+    renderBoard();
+    updateScoresUI();
+    $('resetBtn').textContent = '💀';
+    const isMe = (playerIdx === 0 && mySeat === 'left') || (playerIdx === 1 && mySeat === 'right');
+    if (isMe) { showToast('💀 คุณเหยียบระเบิด!', 'error'); showPopup('💀 แพ้'); }
+    else { showToast('🎉 คู่ต่อสู้เหยียบระเบิด! คุณชนะ!', 'info'); const pts=Math.max(1000-timer*5,100); showPopup('🎉 ชนะ! +'+pts); createConfetti(); }
+    return null;
   }
-
-  floodFill(r, c);
-  render();
+  const seen = new Set();
+  const revealedCount = floodFill(r, c, seen);
+  score[playerIdx] += revealedCount;
+  renderBoard();
   animateReveal();
-  checkWin();
+  updateScoresUI();
+  checkWin(playerIdx);
+  return { revealedCount, newScore: score[playerIdx] };
 }
 
-function explodeParticles(el) {
-  const rect = el.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-  for (let i = 0; i < 25; i++) {
-    const p = document.createElement('div');
-    p.style.cssText = `position:fixed;width:5px;height:5px;border-radius:50%;
-      background:${['#e94560','#ff6b6b','#ffd93d','#ff8c00','#fff'][Math.floor(Math.random()*5)]};
-      pointer-events:none;z-index:99;left:${cx}px;top:${cy}px`;
-    document.body.appendChild(p);
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 50 + Math.random() * 130;
-    p.animate([
-      { transform: 'translate(0,0) scale(1)', opacity: 1 },
-      { transform: `translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0)`, opacity: 0 }
-    ], { duration: 400 + Math.random() * 400, easing: 'ease-out' }).onfinish = () => p.remove();
-  }
-}
-
-function checkWin() {
-  let count = 0;
-  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (revealed[r][c]) count++;
-  if (count !== ROWS * COLS - MINES) return;
-  gameOver = true; clearInterval(timerInterval); resetBtn.textContent = '😎';
-
-  const cells = boardEl.querySelectorAll('.cell');
-  cells.forEach((el, i) => {
-    setTimeout(() => el.classList.add('win-cell'), i * 15);
-  });
-
-  const pts = Math.max(1000 - timer * 5, 100);
-  const popup = document.createElement('div'); popup.className = 'popup';
-  popup.textContent = '🎉 ' + pts;
-  gameEl.appendChild(popup); setTimeout(() => popup.remove(), 1400);
-
-  const cc = document.createElement('div'); cc.className = 'confetti-container';
-  document.body.appendChild(cc);
-  for (let i = 0; i < 120; i++) {
-    const c = document.createElement('div'); c.className = 'confetti';
-    c.style.left = Math.random() * 100 + '%';
-    c.style.background = ['#e94560','#4ecca3','#3b82f6','#ffd93d','#9b59b6','#ff6b6b','#ff8c00','#1abc9c'][Math.floor(Math.random()*8)];
-    c.style.width = (4 + Math.random() * 10) + 'px';
-    c.style.height = (4 + Math.random() * 10) + 'px';
-    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-    c.style.setProperty('--rot', (360 + Math.random() * 720) + 'deg');
-    c.style.animationDuration = (1.5 + Math.random() * 2.5) + 's';
-    c.style.animationDelay = (Math.random() * 2) + 's';
-    cc.appendChild(c);
-  }
-  setTimeout(() => cc.remove(), 5000);
-}
-
-function toggleFlag(e, r, c) {
-  e.preventDefault();
+function processFlag(r, c) {
   if (gameOver || revealed[r][c]) return;
   flags[r][c] = !flags[r][c];
-  render();
-  if (flags[r][c]) {
-    const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-    if (el) { el.classList.remove('flag'); void el.offsetWidth; el.classList.add('flag'); }
+  renderBoard();
+  updateMineCount();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
+}
+
+function checkWin(playerIdx) {
+  let count = 0;
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) if (revealed[r][c]) count++;
+  if (count === ROWS*COLS - MINES) {
+    gameOver = true; clearInterval(timerInterval); $('resetBtn').textContent = '😎';
+    const winnerIdx = score[0] > score[1] ? 0 : (score[1] > score[0] ? 1 : -1);
+    const isTie = winnerIdx === -1;
+    if (isHost) {
+      conn.send({ type: 'game_over', winner: winnerIdx === 0 ? 'left' : 'right', tie: isTie, scores: score });
+    }
+    if (isTie) { showToast('🤝 เสมอกัน!', 'info'); showPopup('🤝 เสมอ!'); }
+    else {
+      const winnerSeat = winnerIdx === 0 ? 'left' : 'right';
+      if (winnerSeat === mySeat) { showToast('🎉 คุณชนะ!', 'info'); const pts=Math.max(1000-timer*5,100); showPopup('🎉 ชนะ! +'+pts); createConfetti(); }
+      else { showToast('😔 คุณแพ้!', 'error'); showPopup('😔 แพ้'); }
+    }
+    document.querySelectorAll('.cell').forEach((el,i)=>{ setTimeout(()=>el.classList.add('win-cell'), i*12); });
   }
 }
 
-function updateMineCount() {
-  let cnt = MINES;
-  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (flags[r][c]) cnt--;
-  mineCountEl.textContent = String(cnt).padStart(3, '0');
-  mineCountEl.classList.remove('pulse'); void mineCountEl.offsetWidth; mineCountEl.classList.add('pulse');
+// ==================== CLICK HANDLER ====================
+function onCellClick(e, r, c) {
+  e.stopPropagation();
+  if (gameOver) return;
+  if (isHost) {
+    const playerIdx = mySeat === 'left' ? 0 : 1;
+    const result = processClick(r, c, playerIdx);
+    if (result) {
+      // Sync state to guest
+      conn.send({ type: 'state_sync', board, revealed: revealed.map(row=>[...row]), flags: flags.map(row=>[...row]), minePos: [...minePos], score, timer, firstClick, gameOver });
+    } else if (result === null && gameOver) {
+      // Mine hit (already handled in processClick)
+    }
+  } else {
+    // Guest sends click to host
+    const playerIdx = mySeat === 'left' ? 0 : 1;
+    conn.send({ type: 'click', r, c, player: playerIdx });
+    // Optimistic: disable the cell temporarily
+    const cell = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+    if (cell) cell.classList.add('pending');
+  }
 }
 
-function render() {
+function onCellRightClick(e, r, c) {
+  e.preventDefault();
+  if (gameOver) return;
+  if (isHost) {
+    processFlag(r, c);
+    conn.send({ type: 'state_sync', board, revealed: revealed.map(row=>[...row]), flags: flags.map(row=>[...row]), minePos: [...minePos], score, timer, firstClick, gameOver });
+  } else {
+    conn.send({ type: 'flag', r, c });
+  }
+}
+
+// ==================== APPLY STATE (Guest) ====================
+function applyState(data) {
+  board = data.board;
+  revealed = data.revealed;
+  flags = data.flags;
+  minePos = new Set(data.minePos);
+  score = data.score;
+  timer = data.timer;
+  firstClick = data.firstClick;
+  gameOver = data.gameOver;
+  timerEl.textContent = String(timer).padStart(3, '0');
+  renderBoard();
+  animateReveal();
+  updateScoresUI();
+  updateMineCount();
+}
+
+// ==================== RENDER ====================
+function renderBoard() {
+  boardEl.style.gridTemplateColumns = `repeat(${COLS}, 38px)`;
   boardEl.innerHTML = '';
-  boardEl.style.gridTemplateColumns = `repeat(${COLS}, 40px)`;
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const cell = document.createElement('div');
@@ -372,22 +596,129 @@ function render() {
       cell.dataset.r = r; cell.dataset.c = c;
       if (revealed[r][c]) {
         cell.classList.add('revealed');
-        if (board[r][c] === -1) { cell.textContent = '💣'; }
+        if (board[r][c] === -1) { cell.textContent = '💣'; cell.classList.add('mine'); }
         else if (board[r][c] > 0) { cell.innerHTML = '<span class="num">' + board[r][c] + '</span>'; cell.style.color = colors[board[r][c]]; }
       } else {
         cell.classList.add('hidden');
         if (flags[r][c]) { cell.textContent = '🚩'; cell.classList.add('flag'); }
       }
-      cell.addEventListener('click', (ev) => handleClick(ev, r, c));
-      cell.addEventListener('contextmenu', (ev) => toggleFlag(ev, r, c));
+      cell.addEventListener('click', (ev) => onCellClick(ev, r, c));
+      cell.addEventListener('contextmenu', (ev) => onCellRightClick(ev, r, c));
       boardEl.appendChild(cell);
     }
   }
-  updateMineCount();
 }
 
-resetBtn.addEventListener('click', () => { resetBtn.textContent = '🙂'; clearInterval(timerInterval); init(); });
-init();
+function animateReveal() {
+  const cells = boardEl.querySelectorAll('.cell.revealed');
+  cells.forEach((el, i) => {
+    el.style.animation = 'none'; void el.offsetWidth;
+    el.style.animation = `revealAnim 0.3s ease forwards`;
+    el.style.animationDelay = (i * 10) + 'ms';
+    const num = el.querySelector('.num');
+    if (num) { num.style.animation = 'none'; void num.offsetWidth; num.style.animation = 'numPop 0.3s ease'; }
+  });
+}
+
+function revealMineExplosion(r, c, loserSeat) {
+  gameEl.classList.remove('shake'); void gameEl.offsetWidth; gameEl.classList.add('shake');
+  let idx = 0;
+  for (const pos of minePos) {
+    const [mr, mc] = pos.split(',').map(Number);
+    setTimeout(() => {
+      const el = document.querySelector(`[data-r="${mr}"][data-c="${mc}"]`);
+      if (!el) return;
+      if (mr === r && mc === c) {
+        el.classList.remove('hidden','flag'); el.classList.add('revealed','mine-hit'); el.textContent = '💣';
+        explodeParticles(el);
+      } else if (!el.classList.contains('revealed')) {
+        el.classList.remove('hidden','flag'); el.classList.add('revealed','mine'); el.textContent = '💣';
+      }
+    }, idx * 70);
+    idx++;
+  }
+}
+
+function explodeParticles(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.style.cssText = `position:fixed;width:5px;height:5px;border-radius:50%;background:${['#e94560','#ff6b6b','#ffd93d','#ff8c00','#fff'][Math.floor(Math.random()*5)]};pointer-events:none;z-index:99;left:${cx}px;top:${cy}px`;
+    document.body.appendChild(p);
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 50 + Math.random() * 120;
+    p.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0)`,opacity:0}],{duration:400+Math.random()*400,easing:'ease-out'}).onfinish = ()=>p.remove();
+  }
+}
+
+function updateScoresUI() {
+  $('scoreLeft').textContent = score[0];
+  $('scoreRight').textContent = score[1];
+}
+
+function updateMineCount() {
+  let cnt = MINES;
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) if (flags[r][c]) cnt--;
+  mineCountEl.textContent = String(cnt).padStart(3,'0');
+}
+
+// ==================== UI HELPERS ====================
+function showToast(msg, type) {
+  const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = '0.3s'; setTimeout(()=>t.remove(),300); }, 2500);
+}
+
+function showPopup(text) {
+  const p = document.createElement('div'); p.className = 'popup'; p.textContent = text;
+  gameEl.appendChild(p); setTimeout(() => p.remove(), 1400);
+}
+
+function createConfetti() {
+  const cc = document.createElement('div'); cc.className = 'confetti-container';
+  document.body.appendChild(cc);
+  for (let i = 0; i < 100; i++) {
+    const c = document.createElement('div'); c.className = 'confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.background = ['#e94560','#4ecca3','#3b82f6','#ffd93d','#9b59b6','#ff6b6b','#ff8c00','#1abc9c'][Math.floor(Math.random()*8)];
+    c.style.width = (4+Math.random()*10)+'px'; c.style.height = (4+Math.random()*10)+'px';
+    c.style.borderRadius = Math.random()>0.5?'50%':'2px';
+    c.style.setProperty('--rot', (360+Math.random()*720)+'deg');
+    c.style.animationDuration = (1.5+Math.random()*2.5)+'s';
+    c.style.animationDelay = (Math.random()*2)+'s';
+    cc.appendChild(c);
+  }
+  setTimeout(()=>cc.remove(), 5000);
+}
+
+function copyLink() {
+  const url = $('shareUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('✅ คัดลอกลิงก์แล้ว!', 'info')).catch(() => {});
+}
+
+function resetGame() {
+  if (isHost) {
+    initLocal(null, null, [0,0], 0, true);
+    renderBoard();
+    updateScoresUI();
+    $('resetBtn').textContent = '🙂';
+    gameOver = false;
+    conn.send({ type: 'reset_game', board, mines: [...minePos], scores: [0,0], timer: 0 });
+  } else {
+    conn.send({ type: 'reset_request' });
+  }
+}
+
+// ==================== AUTO-JOIN FROM URL ====================
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get('room');
+  if (room && room.length === 4) {
+    $('roomCodeInput').value = room.toUpperCase();
+    setTimeout(joinRoom, 500);
+  }
+})();
 </script>
 </body>
 </html>
