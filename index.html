@@ -114,6 +114,34 @@ body {
   color: #fff; font-size: 12px; text-align: right;
 }
 .hero-meter span { display: block; color: #4ecca3; font-weight: 800; font-size: 16px; }
+.hero-menu {
+  position: absolute; top: 20px; right: 18px; z-index: 2; display: flex; gap: 14px;
+}
+.hero-menu-item {
+  width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 8px 18px rgba(0,0,0,0.22);
+  color: #ffd166; font-size: 24px; backdrop-filter: blur(10px);
+}
+.hero-menu-item.blue { color: #60a5fa; }
+.hero-menu-item.pink { color: #f472b6; }
+.hero-menu-item.purple { color: #a78bfa; }
+.hero-footer {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.06);
+}
+.hero-footer-item {
+  padding: 16px 18px; background: rgba(6, 10, 28, 0.65); display: flex; gap: 12px; align-items: center;
+}
+.hero-footer-icon {
+  width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center;
+  background: rgba(78,204,163,0.14); color: #4ecca3; font-size: 18px; flex: none;
+}
+.hero-footer-item:nth-child(2) .hero-footer-icon { background: rgba(245,158,11,0.14); color: #fbbf24; }
+.hero-footer-item:nth-child(3) .hero-footer-icon { background: rgba(244,114,182,0.14); color: #f472b6; }
+.hero-footer-text strong { display: block; color: #fff; font-size: 12px; margin-bottom: 2px; }
+.hero-footer-text span { color: #aab5c5; font-size: 11px; line-height: 1.4; }
 .hero-gridline { opacity: 0.22; }
 .hero-pulse { animation: pulseFloat 6s ease-in-out infinite; transform-origin: center; }
 @keyframes pulseFloat { 0%,100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-8px) scale(1.01); } }
@@ -133,6 +161,8 @@ body {
   .join-row input { width: 100%; }
   .join-row .btn { width: 100%; }
   .hero-card, .hero-art { min-height: 300px; }
+  .hero-menu { gap: 8px; transform: scale(0.85); transform-origin: top right; }
+  .hero-footer { grid-template-columns: 1fr; }
 }
 .lobby .divider { color: #556; margin: 16px 0; font-size: 13px; display: flex; align-items: center; gap: 12px; }
 .lobby .divider::before, .lobby .divider::after { content: ''; flex: 1; height: 1px; background: #334; }
@@ -266,6 +296,12 @@ body {
       </div>
       <div class="hero-card" aria-hidden="true">
         <div class="hero-badge">Generated visual <strong>not icon</strong></div>
+        <div class="hero-menu">
+          <div class="hero-menu-item">🏆</div>
+          <div class="hero-menu-item pink">⭐</div>
+          <div class="hero-menu-item blue">👥</div>
+          <div class="hero-menu-item purple">⚙️</div>
+        </div>
         <div class="hero-meter"><span>9x9</span>glow board</div>
         <svg class="hero-art" viewBox="0 0 520 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Minesweeper hero illustration">
           <defs>
@@ -344,6 +380,20 @@ body {
           <circle cx="392" cy="274" r="3.6" fill="#4ecca3" opacity="0.6"/>
           <circle cx="148" cy="286" r="2.8" fill="#ffd93d" opacity="0.75"/>
         </svg>
+        <div class="hero-footer">
+          <div class="hero-footer-item">
+            <div class="hero-footer-icon">⬛</div>
+            <div class="hero-footer-text"><strong>คลาสสิกที่คุณรัก</strong><span>เล่นง่าย แต่ท้าทาย</span></div>
+          </div>
+          <div class="hero-footer-item">
+            <div class="hero-footer-icon">🛡️</div>
+            <div class="hero-footer-text"><strong>เล่นกับเพื่อน</strong><span>สร้างห้อง แชร์รหัส และสนุกไปด้วยกัน</span></div>
+          </div>
+          <div class="hero-footer-item">
+            <div class="hero-footer-icon">✨</div>
+            <div class="hero-footer-text"><strong>อัปเดตสม่ำเสมอ</strong><span>ธีมใหม่ ๆ และเอฟเฟกต์จัดเต็ม</span></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
