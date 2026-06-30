@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minesweeper</title>
+<style>
+* { box-sizing: border-box; user-select: none; }
+body {
+  display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  font-family: 'Segoe UI', sans-serif; overflow: hidden;
+}
+.bg-particles {
+  position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+}
+.bg-particle {
+  position: absolute; width: 3px; height: 3px; background: rgba(255,255,255,0.3); border-radius: 50%;
+  animation: float linear infinite;
+}
+@keyframes float {
+  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+}
+.game {
+  position: relative; z-index: 1;
+  background: rgba(22, 33, 62, 0.85); backdrop-filter: blur(12px);
+  padding: 24px; border-radius: 20px;
+  box-shadow: 0 0 60px rgba(233, 69, 96, 0.2), 0 8px 32px rgba(0,0,0,0.5);
+  border: 1px solid rgba(233, 69, 96, 0.15);
+  animation: gameIn 0.5s ease;
+}
+@keyframes gameIn {
+  0% { transform: scale(0.8) translateY(40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px;
+}
+.header > div {
+  background: rgba(15, 52, 96, 0.8); color: #e94560; padding: 8px 16px; border-radius: 10px;
+  font-size: 26px; font-weight: bold; font-family: 'Courier New', monospace;
+  min-width: 72px; text-align: center; border: 1px solid rgba(233, 69, 96, 0.2);
+  position: relative; overflow: hidden;
+}
+.header > div::after {
+  content: ''; position: absolute; inset: 0; border-radius: 10px;
+  background: linear-gradient(90deg, transparent, rgba(233,69,96,0.1), transparent);
+  transform: translateX(-100%); animation: shimmer 3s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.pulse { animation: pulseAnim 0.3s ease; }
+@keyframes pulseAnim {
+  0% { transform: scale(1); } 50% { transform: scale(1.15); color: #4ecca3; } 100% { transform: scale(1); }
+}
+button {
+  background: linear-gradient(135deg, #e94560, #c73652); color: #fff; border: none;
+  padding: 10px 24px; border-radius: 10px; font-size: 22px; cursor: pointer; font-weight: bold;
+  transition: 0.2s; box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+}
+button:hover { transform: scale(1.1) rotate(-5deg); box-shadow: 0 6px 25px rgba(233, 69, 96, 0.5); }
+button:active { transform: scale(0.95); }
+.board { display: grid; gap: 3px; }
+.cell {
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 17px; border-radius: 6px; cursor: pointer;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.cell.hidden { background: #0f3460; color: #fff; }
+.cell.hidden:hover {
+  background: #1a5a8a; transform: scale(1.08); z-index: 2;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+}
+.cell.revealed {
+  background: rgba(26, 26, 64, 0.9);
+  animation: revealAnim 0.3s ease;
+}
+@keyframes revealAnim {
+  0% { transform: scale(0.5) rotateX(90deg); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1) rotateX(0deg); }
+}
+.cell.flag {
+  animation: flagAnim 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  color: #e94560;
+}
+@keyframes flagAnim {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.cell.mine {
+  animation: mineAnim 0.5s ease;
+  background: #e94560 !important; box-shadow: 0 0 30px rgba(233,69,96,0.6);
+}
+@keyframes mineAnim {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.4); box-shadow: 0 0 50px rgba(233,69,96,0.9); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.cell.mine-hit {
+  background: #ff0000 !important; box-shadow: 0 0 60px rgba(255,0,0,0.9); z-index: 3;
+  animation: hitAnim 0.6s ease;
+}
+@keyframes hitAnim {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.6); }
+  40% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+.shake {
+  animation: shakeAnim 0.5s ease;
+}
+@keyframes shakeAnim {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px) rotate(-1deg); }
+  30% { transform: translateX(8px) rotate(1deg); }
+  45% { transform: translateX(-5px); }
+  60% { transform: translateX(5px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+.win-cell {
+  animation: winAnim 0.6s ease forwards;
+}
+@keyframes winAnim {
+  0% { box-shadow: 0 0 0 rgba(78,204,163,0); }
+  50% { box-shadow: 0 0 25px rgba(78,204,163,0.5); transform: scale(1.08); background: rgba(78,204,163,0.15) !important; }
+  100% { box-shadow: 0 0 8px rgba(78,204,163,0.2); transform: scale(1); }
+}
+.num-pop { animation: numPop 0.3s ease; }
+@keyframes numPop {
+  0% { transform: scale(0); color: #fff; }
+  60% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+.confetti-container {
+  position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden;
+}
+.confetti {
+  position: absolute; width: 10px; height: 10px; top: -10px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(var(--rot)); opacity: 0; }
+}
+.popup {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 40px; font-weight: bold; color: #4ecca3; pointer-events: none;
+  text-shadow: 0 0 30px rgba(78,204,163,0.5); z-index: 10;
+  animation: popupAnim 1.2s ease forwards;
+}
+@keyframes popupAnim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  25% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+  60% { transform: translate(-50%, -70%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -130%) scale(0.8); opacity: 0; }
+}
+</style>
+</head>
+<body>
+<div class="bg-particles" id="bgParticles"></div>
+<div class="game" id="gameEl">
+  <div class="header">
+    <div id="mineCount">000</div>
+    <button id="reset">🙂</button>
+    <div id="timer">000</div>
+  </div>
+  <div id="board" class="board"></div>
+</div>
+
+<script>
+const COLS = 9, ROWS = 9, MINES = 10;
+let board, revealed, flags, gameOver, minePos, firstClick, timer, timerInterval;
+const boardEl = document.getElementById('board');
+const mineCountEl = document.getElementById('mineCount');
+const timerEl = document.getElementById('timer');
+const resetBtn = document.getElementById('reset');
+const gameEl = document.getElementById('gameEl');
+const colors = ['', '#4ecca3', '#3b82f6', '#e94560', '#9b59b6', '#1abc9c', '#f39c12', '#e74c3c', '#95a5a6'];
+
+function createBgParticles() {
+  const c = document.getElementById('bgParticles');
+  for (let i = 0; i < 50; i++) {
+    const p = document.createElement('div'); p.className = 'bg-particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
+    p.style.animationDuration = (10 + Math.random() * 20) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    c.appendChild(p);
+  }
+}
+createBgParticles();
+
+function init() {
+  board = []; revealed = []; flags = []; gameOver = false; minePos = new Set(); firstClick = true;
+  clearInterval(timerInterval); timer = 0; timerEl.textContent = '000';
+  for (let r = 0; r < ROWS; r++) {
+    board[r] = []; revealed[r] = []; flags[r] = [];
+    for (let c = 0; c < COLS; c++) { board[r][c] = 0; revealed[r][c] = false; flags[r][c] = false; }
+  }
+  render();
+}
+
+function placeMines(exR, exC) {
+  let placed = 0;
+  while (placed < MINES) {
+    const r = Math.floor(Math.random() * ROWS);
+    const c = Math.floor(Math.random() * COLS);
+    if (board[r][c] === -1 || (Math.abs(r - exR) <= 1 && Math.abs(c - exC) <= 1)) continue;
+    board[r][c] = -1; minePos.add(r + ',' + c); placed++;
+  }
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (board[r][c] === -1) continue;
+      let cnt = 0;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === -1) cnt++;
+        }
+      }
+      board[r][c] = cnt;
+    }
+  }
+}
+
+function floodFill(r, c) {
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS || revealed[r][c] || flags[r][c]) return;
+  revealed[r][c] = true;
+  if (board[r][c] === 0) {
+    for (let dr = -1; dr <= 1; dr++)
+      for (let dc = -1; dc <= 1; dc++)
+        floodFill(r + dr, c + dc);
+  }
+}
+
+function animateReveal() {
+  const cells = boardEl.querySelectorAll('.cell.revealed');
+  cells.forEach((el, i) => {
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = `revealAnim 0.3s ease forwards`;
+    el.style.animationDelay = (i * 12) + 'ms';
+    const num = el.querySelector('.num');
+    if (num) { num.style.animation = 'none'; void num.offsetWidth; num.style.animation = 'numPop 0.3s ease'; }
+  });
+}
+
+function handleClick(e, r, c) {
+  e.stopPropagation();
+  if (gameOver || revealed[r][c] || flags[r][c]) return;
+
+  if (firstClick) {
+    firstClick = false; placeMines(r, c);
+    timerInterval = setInterval(() => {
+      timer++; timerEl.textContent = String(timer).padStart(3, '0');
+      timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse');
+    }, 1000);
+  }
+
+  if (board[r][c] === -1) {
+    gameOver = true; clearInterval(timerInterval);
+    gameEl.classList.remove('shake'); void gameEl.offsetWidth; gameEl.classList.add('shake');
+    let idx = 0;
+    for (const pos of minePos) {
+      const [mr, mc] = pos.split(',').map(Number);
+      setTimeout(() => {
+        revealed[mr][mc] = true;
+        const el = document.querySelector(`[data-r="${mr}"][data-c="${mc}"]`);
+        if (!el) return;
+        if (mr === r && mc === c) {
+          el.classList.remove('hidden', 'flag'); el.classList.add('revealed', 'mine-hit'); el.textContent = '💣';
+          explodeParticles(el);
+        } else if (!el.classList.contains('revealed')) {
+          el.classList.remove('hidden', 'flag'); el.classList.add('revealed', 'mine'); el.textContent = '💣';
+        }
+      }, idx * 70);
+      idx++;
+    }
+    resetBtn.textContent = '💀';
+    setTimeout(render, idx * 70 + 150);
+    return;
+  }
+
+  floodFill(r, c);
+  render();
+  animateReveal();
+  checkWin();
+}
+
+function explodeParticles(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.style.cssText = `position:fixed;width:5px;height:5px;border-radius:50%;
+      background:${['#e94560','#ff6b6b','#ffd93d','#ff8c00','#fff'][Math.floor(Math.random()*5)]};
+      pointer-events:none;z-index:99;left:${cx}px;top:${cy}px`;
+    document.body.appendChild(p);
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 50 + Math.random() * 130;
+    p.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0)`, opacity: 0 }
+    ], { duration: 400 + Math.random() * 400, easing: 'ease-out' }).onfinish = () => p.remove();
+  }
+}
+
+function checkWin() {
+  let count = 0;
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (revealed[r][c]) count++;
+  if (count !== ROWS * COLS - MINES) return;
+  gameOver = true; clearInterval(timerInterval); resetBtn.textContent = '😎';
+
+  const cells = boardEl.querySelectorAll('.cell');
+  cells.forEach((el, i) => {
+    setTimeout(() => el.classList.add('win-cell'), i * 15);
+  });
+
+  const pts = Math.max(1000 - timer * 5, 100);
+  const popup = document.createElement('div'); popup.className = 'popup';
+  popup.textContent = '🎉 ' + pts;
+  gameEl.appendChild(popup); setTimeout(() => popup.remove(), 1400);
+
+  const cc = document.createElement('div'); cc.className = 'confetti-container';
+  document.body.appendChild(cc);
+  for (let i = 0; i < 120; i++) {
+    const c = document.createElement('div'); c.className = 'confetti';
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = ['#e94560','#4ecca3','#3b82f6','#ffd93d','#9b59b6','#ff6b6b','#ff8c00','#1abc9c'][Math.floor(Math.random()*8)];
+    c.style.width = (4 + Math.random() * 10) + 'px';
+    c.style.height = (4 + Math.random() * 10) + 'px';
+    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    c.style.setProperty('--rot', (360 + Math.random() * 720) + 'deg');
+    c.style.animationDuration = (1.5 + Math.random() * 2.5) + 's';
+    c.style.animationDelay = (Math.random() * 2) + 's';
+    cc.appendChild(c);
+  }
+  setTimeout(() => cc.remove(), 5000);
+}
+
+function toggleFlag(e, r, c) {
+  e.preventDefault();
+  if (gameOver || revealed[r][c]) return;
+  flags[r][c] = !flags[r][c];
+  render();
+  if (flags[r][c]) {
+    const el = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+    if (el) { el.classList.remove('flag'); void el.offsetWidth; el.classList.add('flag'); }
+  }
+}
+
+function updateMineCount() {
+  let cnt = MINES;
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (flags[r][c]) cnt--;
+  mineCountEl.textContent = String(cnt).padStart(3, '0');
+  mineCountEl.classList.remove('pulse'); void mineCountEl.offsetWidth; mineCountEl.classList.add('pulse');
+}
+
+function render() {
+  boardEl.innerHTML = '';
+  boardEl.style.gridTemplateColumns = `repeat(${COLS}, 40px)`;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r; cell.dataset.c = c;
+      if (revealed[r][c]) {
+        cell.classList.add('revealed');
+        if (board[r][c] === -1) { cell.textContent = '💣'; }
+        else if (board[r][c] > 0) { cell.innerHTML = '<span class="num">' + board[r][c] + '</span>'; cell.style.color = colors[board[r][c]]; }
+      } else {
+        cell.classList.add('hidden');
+        if (flags[r][c]) { cell.textContent = '🚩'; cell.classList.add('flag'); }
+      }
+      cell.addEventListener('click', (ev) => handleClick(ev, r, c));
+      cell.addEventListener('contextmenu', (ev) => toggleFlag(ev, r, c));
+      boardEl.appendChild(cell);
+    }
+  }
+  updateMineCount();
+}
+
+resetBtn.addEventListener('click', () => { resetBtn.textContent = '🙂'; clearInterval(timerInterval); init(); });
+init();
+</script>
+</body>
+</html>
