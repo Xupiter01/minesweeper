@@ -40,7 +40,7 @@ body {
 }
 @keyframes gameIn { 0% { transform: scale(0.8) translateY(40px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 .lobby h1 { color: #e94560; margin: 0 0 8px 0; font-size: 32px; }
-.lobby p { color: #8899aa; margin: 0 0 24px 0; font-size: 14px; }
+.lobby .sub { color: #8899aa; margin: 0 0 24px 0; font-size: 14px; }
 .lobby .btn {
   display: block; width: 100%; padding: 14px; border: none; border-radius: 12px;
   font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 12px;
@@ -49,6 +49,8 @@ body {
 .btn-primary:hover { transform: scale(1.03); box-shadow: 0 6px 25px rgba(233,69,96,0.5); }
 .btn-secondary { background: rgba(15, 52, 96, 0.8); color: #4ecca3; border: 1px solid rgba(78,204,163,0.3) !important; }
 .btn-secondary:hover { transform: scale(1.03); background: rgba(15, 52, 96, 1); }
+.btn-solo { background: linear-gradient(135deg, #4ecca3, #2ea87a); color: #fff; box-shadow: 0 4px 15px rgba(78,204,163,0.3); }
+.btn-solo:hover { transform: scale(1.03); box-shadow: 0 6px 25px rgba(78,204,163,0.5); }
 .lobby .divider { color: #556; margin: 16px 0; font-size: 13px; display: flex; align-items: center; gap: 12px; }
 .lobby .divider::before, .lobby .divider::after { content: ''; flex: 1; height: 1px; background: #334; }
 .join-row { display: flex; gap: 8px; }
@@ -104,6 +106,8 @@ body {
 .player-card.right-card { border-color: #e94560; }
 .player-card.right-card .pscore { color: #e94560; }
 .player-card .you-badge { font-size: 10px; background: #ffd93d; color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; display: inline-block; }
+.solo-mode .players { display: none; }
+.solo-mode .header { margin-top: 0; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px; }
 .header > div {
   background: rgba(15, 52, 96, 0.8); color: #e94560; padding: 6px 12px; border-radius: 10px;
@@ -158,7 +162,9 @@ body {
 <div class="screen active" id="lobbyScreen">
   <div class="lobby">
     <h1>💣 Minesweeper</h1>
-    <p>เล่น 2 ผู้เล่นผ่านอินเทอร์เน็ต</p>
+    <p class="sub">Minesweeper สุดปัง — เล่นคนเดียวหรือชวนเพื่อน!</p>
+    <button class="btn btn-solo" onclick="startSolo()">👤 เล่นคนเดียว</button>
+    <div class="divider">หรือชวนเพื่อน</div>
     <button class="btn btn-primary" onclick="createRoom()">🎮 สร้างห้องใหม่</button>
     <div class="divider">หรือ</div>
     <div class="join-row">
@@ -219,6 +225,7 @@ body {
       <div id="mineCount">000</div>
       <button id="resetBtn" style="padding:6px 18px;font-size:18px;" onclick="resetGame()">🙂</button>
       <div id="timer">000</div>
+      <button id="backBtn" style="padding:6px 10px;font-size:14px;display:none;" onclick="backToLobby()">🏠</button>
     </div>
     <div id="board" class="board"></div>
   </div>
@@ -234,6 +241,7 @@ let gameOver = false, firstClick = true, timer = 0, timerInterval;
 let score = [0, 0]; // 0=left, 1=right
 let mySeat = null; // 'left' or 'right'
 let isHost = false;
+let isSolo = false;
 let peer = null;
 let conn = null;
 let roomCode = null;
@@ -251,6 +259,34 @@ function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.cl
 
 // --- Background ---
 (function(){ const c = $('bgParticles'); for(let i=0;i<40;i++){ const p=document.createElement('div');p.className='bg-particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(1+Math.random()*3)+'px';p.style.animationDuration=(10+Math.random()*20)+'s';p.style.animationDelay=(Math.random()*15)+'s';c.appendChild(p); } })();
+
+// ==================== SOLO MODE ====================
+function startSolo() {
+  cleanupNetwork();
+  isSolo = true; isHost = false; mySeat = null;
+  $('resetBtn').textContent = '🙂';
+  $('backBtn').style.display = 'inline-block';
+  document.getElementById('gameEl').classList.add('solo-mode');
+  initLocal(null, null, [0,0], 0, true);
+  renderBoard();
+  updateScoresUI();
+  showScreen('gameScreen');
+}
+
+function backToLobby() {
+  clearInterval(timerInterval); gameOver = true;
+  cleanupNetwork();
+  isSolo = false; isHost = false; mySeat = null; peer = null; conn = null;
+  $('backBtn').style.display = 'none';
+  document.getElementById('gameEl').classList.remove('solo-mode');
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+  showScreen('lobbyScreen');
+}
+
+function cleanupNetwork() {
+  if (conn) { try { conn.close(); } catch(e) {} conn = null; }
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+}
 
 // ==================== LOBBY ====================
 function generateCode() { const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)]; return c; }
@@ -498,9 +534,12 @@ function processClick(r, c, playerIdx) {
     animateMineExplosion(r, c);
     updateScoresUI();
     $('resetBtn').textContent = '💀';
-    const isMe = (playerIdx === 0 && mySeat === 'left') || (playerIdx === 1 && mySeat === 'right');
-    if (isMe) { showToast('💀 คุณเหยียบระเบิด!', 'error'); showPopup('💀 แพ้'); }
-    else { showToast('🎉 คู่ต่อสู้เหยียบระเบิด! คุณชนะ!', 'info'); showPopup('🎉 ชนะ!'); createConfetti(); }
+    if (isSolo) { showToast('💀 เกมโอเวอร์!', 'error'); showPopup('💀 เกมโอเวอร์'); }
+    else {
+      const isMe = (playerIdx === 0 && mySeat === 'left') || (playerIdx === 1 && mySeat === 'right');
+      if (isMe) { showToast('💀 คุณเหยียบระเบิด!', 'error'); showPopup('💀 แพ้'); }
+      else { showToast('🎉 คู่ต่อสู้เหยียบระเบิด! คุณชนะ!', 'info'); showPopup('🎉 ชนะ!'); createConfetti(); }
+    }
     return null;
   }
   const seen = new Set();
@@ -535,7 +574,8 @@ function checkWin(playerIdx) {
     if (isHost) {
       conn.send({ type: 'game_over', winner: winnerIdx === 0 ? 'left' : 'right', tie: isTie, scores: score, board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos] });
     }
-    if (isTie) { showToast('🤝 เสมอกัน!', 'info'); showPopup('🤝 เสมอ!'); }
+    if (isSolo) { showToast('🎉 ชนะแล้ว!', 'info'); showPopup('🎉 ชนะ!'); createConfetti(); }
+    else if (isTie) { showToast('🤝 เสมอกัน!', 'info'); showPopup('🤝 เสมอ!'); }
     else {
       const winnerSeat = winnerIdx === 0 ? 'left' : 'right';
       if (winnerSeat === mySeat) { showToast('🎉 คุณชนะ!', 'info'); const pts=Math.max(1000-timer*5,100); showPopup('🎉 ชนะ! +'+pts); createConfetti(); }
@@ -549,20 +589,16 @@ function checkWin(playerIdx) {
 function onCellClick(e, r, c) {
   e.stopPropagation();
   if (gameOver) return;
+  if (isSolo) { processClick(r, c, 0); return; }
   if (isHost) {
     const playerIdx = mySeat === 'left' ? 0 : 1;
     const result = processClick(r, c, playerIdx);
     if (result) {
-      // Sync state to guest
       conn.send({ type: 'state_sync', board, revealed: revealed.map(row=>[...row]), flags: flags.map(row=>[...row]), minePos: [...minePos], score, timer, firstClick, gameOver });
-    } else if (result === null && gameOver) {
-      // Mine hit (already handled in processClick)
     }
   } else {
-    // Guest sends click to host
     const playerIdx = mySeat === 'left' ? 0 : 1;
     conn.send({ type: 'click', r, c, player: playerIdx });
-    // Optimistic: disable the cell temporarily
     const cell = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
     if (cell) cell.classList.add('pending');
   }
@@ -571,6 +607,7 @@ function onCellClick(e, r, c) {
 function onCellRightClick(e, r, c) {
   e.preventDefault();
   if (gameOver) return;
+  if (isSolo) { processFlag(r, c); return; }
   if (isHost) {
     processFlag(r, c);
     conn.send({ type: 'state_sync', board, revealed: revealed.map(row=>[...row]), flags: flags.map(row=>[...row]), minePos: [...minePos], score, timer, firstClick, gameOver });
@@ -705,6 +742,14 @@ function copyLink() {
 }
 
 function resetGame() {
+  if (isSolo) {
+    initLocal(null, null, [0,0], 0, true);
+    renderBoard();
+    updateScoresUI();
+    $('resetBtn').textContent = '🙂';
+    gameOver = false;
+    return;
+  }
   if (isHost) {
     initLocal(null, null, [0,0], 0, true);
     renderBoard();
