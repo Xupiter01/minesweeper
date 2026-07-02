@@ -483,7 +483,7 @@ body {
 <body>
 <div class="bg-particles" id="bgParticles"></div>
 <audio id="bgmAudio" loop preload="auto">
-  <source src="assets/minefield-taps.mp3" type="audio/mpeg">
+  <source src="assets/Minefield Taps.mp3" type="audio/mpeg">
 </audio>
 <button id="musicToggle" class="music-toggle" type="button">🎵 เพลง: เปิด</button>
 
@@ -626,8 +626,8 @@ const colors = ['', '#4ecca3', '#3b82f6', '#e94560', '#9b59b6', '#1abc9c', '#f39
 // --- State ---
 let board, revealed, flags, minePos;
 let gameOver = false, firstClick = true, timer = 0, timerInterval;
-let score = [0, 0]; // 0=left, 1=right
-let mySeat = null; // 'left' or 'right'
+let score = [0, 0];
+let mySeat = null;
 let isHost = false;
 let isSolo = false;
 let peer = null;
@@ -638,7 +638,6 @@ let myName = '';
 let musicEnabled = true;
 let musicReady = false;
 
-// --- DOM refs ---
 const $ = id => document.getElementById(id);
 const boardEl = $('board');
 const mineCountEl = $('mineCount');
@@ -648,15 +647,11 @@ const bgmAudio = $('bgmAudio');
 const musicToggle = $('musicToggle');
 
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
-
-// --- Background ---
 (function(){ const c = $('bgParticles'); for(let i=0;i<40;i++){ const p=document.createElement('div');p.className='bg-particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(1+Math.random()*3)+'px';p.style.animationDuration=(10+Math.random()*20)+'s';p.style.animationDelay=(Math.random()*15)+'s';c.appendChild(p); } })();
 
-// --- Music ---
 function updateMusicToggle() {
   musicToggle.textContent = musicEnabled ? '🎵 เพลง: เปิด' : '🔇 เพลง: ปิด';
 }
-
 function tryStartMusic() {
   if (!musicEnabled || !bgmAudio) return;
   bgmAudio.volume = 0.18;
@@ -666,7 +661,6 @@ function tryStartMusic() {
     musicReady = false;
   });
 }
-
 function toggleMusic() {
   musicEnabled = !musicEnabled;
   if (!musicEnabled) {
@@ -676,7 +670,6 @@ function toggleMusic() {
   }
   updateMusicToggle();
 }
-
 musicToggle.addEventListener('click', toggleMusic);
 window.addEventListener('pointerdown', tryStartMusic, { once: true });
 window.addEventListener('keydown', tryStartMusic, { once: true });
@@ -686,7 +679,6 @@ bgmAudio.addEventListener('error', () => {
 });
 updateMusicToggle();
 
-// ==================== SOLO MODE ====================
 function startSolo() {
   tryStartMusic();
   cleanupNetwork();
@@ -699,7 +691,6 @@ function startSolo() {
   updateScoresUI();
   showScreen('gameScreen');
 }
-
 function backToLobby() {
   clearInterval(timerInterval); gameOver = true;
   cleanupNetwork();
@@ -709,15 +700,11 @@ function backToLobby() {
   if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
   showScreen('lobbyScreen');
 }
-
 function cleanupNetwork() {
   if (conn) { try { conn.close(); } catch(e) {} conn = null; }
   if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
 }
-
-// ==================== LOBBY ====================
 function generateCode() { const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)]; return c; }
-
 async function createRoom() {
   tryStartMusic();
   isSolo = false;
@@ -731,7 +718,6 @@ async function createRoom() {
   const url = window.location.origin + window.location.pathname + '?room=' + roomCode;
   $('shareUrl').textContent = url;
   $('waitStatus').textContent = 'กำลังรอผู้เล่นคนที่สอง...';
-
   try {
     peer = new Peer(peerId);
     await new Promise((res, rej) => { peer.on('open', res); peer.on('error', rej); setTimeout(() => rej('timeout'), 10000); });
@@ -747,7 +733,6 @@ async function createRoom() {
     showToast('ไม่สามารถสร้างห้องได้ (peerId ซ้ำหรือ timeout)', 'error');
   }
 }
-
 async function joinRoom() {
   tryStartMusic();
   isSolo = false;
@@ -761,7 +746,6 @@ async function joinRoom() {
   $('roomCodeDisplay').textContent = code;
   $('waitStatus').textContent = 'กำลังเชื่อมต่อ...';
   $('shareLink').style.display = 'none';
-
   try {
     peer = new Peer();
     await new Promise((res, rej) => { peer.on('open', res); peer.on('error', rej); setTimeout(() => rej('timeout'), 10000); });
@@ -775,14 +759,10 @@ async function joinRoom() {
     showToast('ไม่สามารถเชื่อมต่อห้องได้ (รหัสผิดหรือเจ้าห้องออก)', 'error');
   }
 }
-
-// ==================== MESSAGING ====================
 function handleData(data) {
   switch (data.type) {
     case 'join':
-      if (isHost) {
-        showScreen('seatScreen');
-      }
+      if (isHost) showScreen('seatScreen');
       break;
     case 'seat_confirm':
       if (!isHost) {
@@ -824,7 +804,7 @@ function handleData(data) {
       timer = data.timer != null ? data.timer : timer;
       timerEl.textContent = String(timer).padStart(3, '0');
       renderBoard();
-      if (data.hitR !== undefined) { animateMineExplosion(data.hitR, data.hitC); }
+      if (data.hitR !== undefined) animateMineExplosion(data.hitR, data.hitC);
       $('resetBtn').textContent = data.loser === mySeat ? '💀' : '😎';
       if (data.loser) {
         if (data.loser === mySeat) { showToast('💀 คุณเหยียบระเบิด!', 'error'); showPopup('💀 แพ้'); }
@@ -845,7 +825,7 @@ function handleData(data) {
       firstClick = false;
       break;
     case 'reset_request':
-      if (isHost) { resetGame(); }
+      if (isHost) resetGame();
       break;
     case 'opponent_left':
       showToast('👋 คู่ต่อสู้ออกจากเกม', 'error');
@@ -854,8 +834,6 @@ function handleData(data) {
       break;
   }
 }
-
-// ==================== SEAT SELECTION ====================
 let selectedSeat = null;
 function selectSeat(seat) {
   selectedSeat = seat;
@@ -875,8 +853,6 @@ function confirmSeat() {
     showScreen('gameScreen');
   }
 }
-
-// ==================== GAME INIT ====================
 function initLocal(existingBoard, existingMines, scores, t, fc) {
   if (existingBoard) {
     board = existingBoard; revealed = []; flags = [];
@@ -896,13 +872,11 @@ function initLocal(existingBoard, existingMines, scores, t, fc) {
     timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
   }
 }
-
 function initBoardFrom(bd, mines, scores, t, fc) {
   board = bd; minePos = new Set(mines); score = scores; timer = t; firstClick = fc;
   revealed = []; flags = [];
   for (let r = 0; r < ROWS; r++) { revealed[r] = []; flags[r] = []; for (let c = 0; c < COLS; c++) { revealed[r][c] = false; flags[r][c] = false; } }
 }
-
 function startGame() {
   $('nameLeft').textContent = mySeat === 'left' ? 'ฉัน 👈' : (isHost ? 'คุณ' : oppName);
   $('nameRight').textContent = mySeat === 'right' ? 'ฉัน 👈' : (isHost ? 'คุณ' : oppName);
@@ -910,12 +884,8 @@ function startGame() {
   $('scoreRight').textContent = '0';
   $('resetBtn').textContent = '🙂';
   updateMineCount();
-  if (!isHost && firstClick) {
-    renderBoard();
-  }
+  if (!isHost && firstClick) renderBoard();
 }
-
-// ==================== GAME LOGIC ====================
 function placeMines(exR, exC) {
   let placed = 0;
   while (placed < MINES) {
@@ -931,7 +901,6 @@ function placeMines(exR, exC) {
     board[r][c] = cnt;
   }
 }
-
 function floodFill(r, c, seen) {
   if (r<0||r>=ROWS||c<0||c>=COLS||revealed[r][c]||flags[r][c]) return 0;
   const key = r+','+c;
@@ -944,7 +913,6 @@ function floodFill(r, c, seen) {
   }
   return count;
 }
-
 function processClick(r, c, playerIdx) {
   if (gameOver || revealed[r][c] || flags[r][c]) return null;
   if (firstClick) { firstClick = false; placeMines(r, c); startTimer(); }
@@ -977,19 +945,16 @@ function processClick(r, c, playerIdx) {
   checkWin(playerIdx);
   return { revealedCount, newScore: score[playerIdx] };
 }
-
 function processFlag(r, c) {
   if (gameOver || revealed[r][c]) return;
   flags[r][c] = !flags[r][c];
   renderBoard();
   updateMineCount();
 }
-
 function startTimer() {
   clearInterval(timerInterval);
   timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
 }
-
 function checkWin(playerIdx) {
   let count = 0;
   for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) if (revealed[r][c]) count++;
@@ -1010,8 +975,6 @@ function checkWin(playerIdx) {
     document.querySelectorAll('.cell').forEach((el,i)=>{ setTimeout(()=>el.classList.add('win-cell'), i*12); });
   }
 }
-
-// ==================== CLICK HANDLER ====================
 function onCellClick(e, r, c) {
   e.stopPropagation();
   if (gameOver) return;
@@ -1029,7 +992,6 @@ function onCellClick(e, r, c) {
     if (cell) cell.classList.add('pending');
   }
 }
-
 function onCellRightClick(e, r, c) {
   e.preventDefault();
   if (gameOver) return;
@@ -1041,8 +1003,6 @@ function onCellRightClick(e, r, c) {
     conn.send({ type: 'flag', r, c });
   }
 }
-
-// ==================== APPLY STATE (Guest) ====================
 function applyState(data) {
   board = data.board;
   revealed = data.revealed;
@@ -1058,8 +1018,6 @@ function applyState(data) {
   updateScoresUI();
   updateMineCount();
 }
-
-// ==================== RENDER ====================
 function renderBoard() {
   boardEl.style.gridTemplateColumns = `repeat(${COLS}, 38px)`;
   boardEl.innerHTML = '';
@@ -1082,7 +1040,6 @@ function renderBoard() {
     }
   }
 }
-
 function animateReveal() {
   const cells = boardEl.querySelectorAll('.cell.revealed');
   cells.forEach((el, i) => {
@@ -1093,7 +1050,6 @@ function animateReveal() {
     if (num) { num.style.animation = 'none'; void num.offsetWidth; num.style.animation = 'numPop 0.3s ease'; }
   });
 }
-
 function animateMineExplosion(hitR, hitC) {
   gameEl.classList.remove('shake'); void gameEl.offsetWidth; gameEl.classList.add('shake');
   let idx = 0;
@@ -1108,7 +1064,6 @@ function animateMineExplosion(hitR, hitC) {
     idx++;
   }
 }
-
 function explodeParticles(el) {
   const rect = el.getBoundingClientRect();
   const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
@@ -1121,30 +1076,24 @@ function explodeParticles(el) {
     p.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0)`,opacity:0}],{duration:400+Math.random()*400,easing:'ease-out'}).onfinish = ()=>p.remove();
   }
 }
-
 function updateScoresUI() {
   $('scoreLeft').textContent = score[0];
   $('scoreRight').textContent = score[1];
 }
-
 function updateMineCount() {
   let cnt = MINES;
   for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) if (flags[r][c]) cnt--;
   mineCountEl.textContent = String(cnt).padStart(3,'0');
 }
-
-// ==================== UI HELPERS ====================
 function showToast(msg, type) {
   const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = '0.3s'; setTimeout(()=>t.remove(),300); }, 2500);
 }
-
 function showPopup(text) {
   const p = document.createElement('div'); p.className = 'popup'; p.textContent = text;
   gameEl.appendChild(p); setTimeout(() => p.remove(), 1400);
 }
-
 function createConfetti() {
   const cc = document.createElement('div'); cc.className = 'confetti-container';
   document.body.appendChild(cc);
@@ -1161,12 +1110,10 @@ function createConfetti() {
   }
   setTimeout(()=>cc.remove(), 5000);
 }
-
 function copyLink() {
   const url = $('shareUrl').textContent;
   navigator.clipboard.writeText(url).then(() => showToast('✅ คัดลอกลิงก์แล้ว!', 'info')).catch(() => {});
 }
-
 function resetGame() {
   if (isSolo) {
     initLocal(null, null, [0,0], 0, true);
@@ -1187,8 +1134,6 @@ function resetGame() {
     conn.send({ type: 'reset_request' });
   }
 }
-
-// ==================== AUTO-JOIN FROM URL ====================
 (function(){
   const params = new URLSearchParams(window.location.search);
   const room = params.get('room');
