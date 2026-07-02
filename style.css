@@ -388,6 +388,33 @@ body {
     min-width: 118px;
     padding: 11px 14px;
   }
+  /* Mobile: power-up bar + board tweaks */
+  .powerup-bar { gap: 6px; flex-wrap: wrap; }
+  .powerup-btn { min-width: 64px; padding: 8px 10px; }
+  .pu-icon { font-size: 20px; }
+  .pu-label { font-size: 11px; }
+  .game-container { padding: 8px 4px; border-radius: 14px; }
+  .header > div, .header > button { font-size: 14px; }
+  .player-card { padding: 8px 10px; }
+  .player-card .pname { font-size: 12px; }
+  .player-card .pscore { font-size: 18px; }
+  .combo-display { padding: 12px 24px; }
+  .combo-count { font-size: 28px; }
+  .combo-label { font-size: 12px; }
+  /* Extra small phones: stack players vertically, shrink header */
+  @media (max-width: 480px) {
+    .players { flex-direction: row; gap: 8px; }
+    .player-card { flex: 1; padding: 6px 8px; }
+    .player-card .pscore { font-size: 16px; }
+    .header { padding: 0 6px; }
+    .header > div, .header > button { font-size: 12px; padding: 4px 8px; }
+    /* On tiny screens, hard mode would overflow: encourage smaller difficulty */
+    .game-container::before {
+      content: '💡 ถ้าแน่น ลองเปลี่ยนเป็น 🟡 กลาง';
+      display: block; text-align: center; font-size: 11px;
+      color: rgba(255,255,255,0.5); margin-bottom: 6px;
+    }
+  }
 }
 .waiting { text-align: center; padding: 40px; }
 .waiting .room-code { font-size: 48px; letter-spacing: 8px; color: #4ecca3; font-weight: bold; font-family: monospace; margin: 16px 0; text-shadow: 0 0 30px rgba(78,204,163,0.3); }
@@ -438,7 +465,7 @@ body {
 }
 .pulse { animation: pulseAnim 0.3s ease; }
 @keyframes pulseAnim { 0% { transform: scale(1); } 50% { transform: scale(1.15); color: #4ecca3; } 100% { transform: scale(1); } }
-.board { display: grid; gap: 3px; justify-content: center; }
+.board { display: grid; gap: clamp(0px, 0.4vw, 3px); justify-content: center; }
 .powerup-bar {
   display: flex; gap: 10px; justify-content: center; margin-top: 14px;
 }
@@ -483,9 +510,14 @@ body.shield-ready::after {
 .combo-display.tier-2 { background: linear-gradient(135deg, #f39c12, #e74c3c); color: #fff; box-shadow: 0 0 40px rgba(243,156,18,0.7); }
 .combo-display.tier-3 { background: linear-gradient(135deg, #e94560, #9b59b6); color: #fff; box-shadow: 0 0 50px rgba(233,69,96,0.8); }
 .cell {
-  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
-  font-weight: bold; font-size: 16px; border-radius: 5px; cursor: pointer;
+  width: clamp(18px, 7vw, 38px);
+  height: clamp(18px, 7vw, 38px);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: clamp(10px, 2.8vw, 16px);
+  border-radius: 5px; cursor: pointer;
   transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  touch-action: manipulation; /* prevent double-tap zoom on mobile */
+  -webkit-tap-highlight-color: transparent; /* remove tap highlight */
 }
 .cell.hidden { background: #0f3460; color: #fff; }
 .cell.hidden:hover { background: #1a5a8a; transform: scale(1.08); z-index: 2; box-shadow: 0 0 20px rgba(233, 69, 96, 0.3); }
