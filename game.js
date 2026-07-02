@@ -21,6 +21,9 @@ let roomCode = null;
 let oppName = 'ฝั่งตรงข้าม';
 let myName = '';
 let musicEnabled = true;
+// Power-ups state (ponytail: simple object, per-player count)
+let powerups = { scan: 1, shield: 1, paper: 1 };
+let shieldActive = false;
 const $ = id => document.getElementById(id);
 const boardEl = $('board');
 const mineCountEl = $('mineCount');
@@ -41,6 +44,83 @@ function setDifficulty(level) {
 }
 
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
+
+// Power-ups: scan=random safe cell, shield=block 1 mine hit, paper=reveal 3x3
+function usePowerup(type) {
+  if (gameOver || powerups[type] <= 0) return;
+  if (type === 'scan') powerupScan();
+  else if (type === 'shield') powerupShield();
+  else if (type === 'paper') { showToast('🔍 เลือกช่องที่จะใช้เปเปอร์ (เปิด 3×3)', 'info'); pendingPaper = true; return; }
+  powerups[type]--;
+  updatePowerupUI(type);
+  // Animate
+  const btn = document.getElementById('pu-' + type);
+  if (btn) { btn.classList.add('used'); setTimeout(() => btn.classList.remove('used'), 600); }
+  // Sync to opponent in 2P mode
+  if (!isSolo && conn) conn.send({ type: 'powerup_used', pu: type });
+}
+
+let pendingPaper = false;
+function powerupScan() {
+  // Find random unrevealed cell that is not a mine
+  const candidates = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    if (!revealed[r][c] && !flags[r][c] && !minePos.has(r+','+c)) candidates.push([r,c]);
+  }
+  if (candidates.length === 0) { showToast('ไม่มีช่องปลอดภัยให้สแกน', 'error'); return; }
+  const [r, c] = candidates[Math.floor(Math.random() * candidates.length)];
+  // First click handling: ensure mines placed
+  if (firstClick) { firstClick = false; placeMines(r, c); startTimer(); }
+  const playerIdx = isSolo ? 0 : (mySeat === 'left' ? 0 : 1);
+  processClick(r, c, playerIdx);
+  if (isHost || isSolo) renderBoard();
+  showToast('🎯 สแกนเจอช่องปลอดภัย!', 'info');
+}
+
+function powerupShield() {
+  shieldActive = true;
+  showToast('🛡️ โล่พร้อม! เหยียบระเบิดครั้งต่อไปจะไม่แพ้', 'info');
+  // Visual indicator
+  document.body.classList.add('shield-ready');
+}
+
+function applyPowerupPaper(r, c) {
+  if (!pendingPaper) return false;
+  pendingPaper = false;
+  const playerIdx = isSolo ? 0 : (mySeat === 'left' ? 0 : 1);
+  for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+    const nr=r+dr, nc=c+dc;
+    if (nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+    if (board[nr][nc] !== -1 && !revealed[nr][nc]) {
+      const seen = new Set();
+      floodFill(nr, nc, seen);
+    }
+  }
+  checkWin(playerIdx);
+  renderBoard();
+  // Decrement paper (ponytail: inline)
+  powerups.paper--;
+  updatePowerupUI('paper');
+  const btn = document.getElementById('pu-paper');
+  if (btn) { btn.classList.add('used'); setTimeout(() => btn.classList.remove('used'), 600); }
+  showToast('🔍 เปเปอร์เปิด 3×3 แล้ว!', 'info');
+  return true;
+}
+
+function updatePowerupUI(type) {
+  const btn = document.getElementById('pu-' + type);
+  if (!btn) return;
+  const count = powerups[type];
+  btn.querySelector('.pu-count').textContent = '×' + count;
+  btn.disabled = count <= 0;
+}
+
+// Helper: get current player (for 2P turn tracking — ponytail: simple heuristic)
+function getCurrentPlayerSeat() {
+  // Alternates per click; first player starts
+  return totalClicks % 2 === 0 ? 'left' : 'right';
+}
+let totalClicks = 0;
 (function(){ const c = $('bgParticles'); for(let i=0;i<40;i++){ const p=document.createElement('div');p.className='bg-particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(1+Math.random()*3)+'px';p.style.animationDuration=(10+Math.random()*20)+'s';p.style.animationDelay=(Math.random()*15)+'s';c.appendChild(p); } })();
 function updateMusicToggle() { musicToggle.textContent = musicEnabled ? '🎵 เพลง: เปิด' : '🔇 เพลง: ปิด'; }
 function tryStartMusic() {
@@ -249,6 +329,12 @@ function initLocal(existingBoard, existingMines, scores, t, fc) {
   timerEl.textContent = String(timer).padStart(3, '0');
   firstClick = fc;
   gameOver = false;
+  shieldActive = false;
+  pendingPaper = false;
+  totalClicks = 0;
+  powerups = { scan: 1, shield: 1, paper: 1 };
+  document.body.classList.remove('shield-ready');
+  ['scan','shield','paper'].forEach(updatePowerupUI);
   clearInterval(timerInterval);
   if (!fc) timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
 }
@@ -295,6 +381,17 @@ function processClick(r, c, playerIdx) {
   if (gameOver || revealed[r][c] || flags[r][c]) return null;
   if (firstClick) { firstClick = false; placeMines(r, c); startTimer(); }
   if (board[r][c] === -1) {
+    // Shield blocks mine hit once (ponytail: simple inline check)
+    if (shieldActive) {
+      shieldActive = false;
+      document.body.classList.remove('shield-ready');
+      showToast('🛡️ โล่ป้องกันระเบิด!', 'info');
+      // Mark cell as revealed but safe
+      revealed[r][c] = true;
+      renderBoard();
+      totalClicks++;
+      return { revealedCount: 1, newScore: score[playerIdx] };
+    }
     const winnerSeat = playerIdx === 0 ? 'right' : 'left';
     const loserSeat = playerIdx === 0 ? 'left' : 'right';
     gameOver = true; clearInterval(timerInterval);
@@ -315,6 +412,7 @@ function processClick(r, c, playerIdx) {
   const seen = new Set();
   const revealedCount = floodFill(r, c, seen);
   score[playerIdx] += revealedCount;
+  totalClicks++;
   renderBoard();
   animateReveal();
   updateScoresUI();
@@ -352,6 +450,10 @@ function checkWin(playerIdx) {
 function onCellClick(e, r, c) {
   e.stopPropagation();
   if (gameOver) return;
+  // Paper powerup takes priority (ponytail: simple inline check)
+  if (pendingPaper) {
+    if (applyPowerupPaper(r, c)) { totalClicks++; return; }
+  }
   if (isSolo) { processClick(r, c, 0); return; }
   if (isHost) {
     const playerIdx = mySeat === 'left' ? 0 : 1;

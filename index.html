@@ -101,6 +101,17 @@
       <button id="backBtn" style="padding:6px 10px;font-size:14px;display:none;" onclick="backToLobby()">🏠</button>
     </div>
     <div id="board" class="board"></div>
+    <div class="powerup-bar">
+      <button class="powerup-btn" id="pu-scan" onclick="usePowerup('scan')" title="เปิดช่องสุ่ม 1 ช่อง (ไม่ใช่ระเบิด)">
+        <span class="pu-icon">🎯</span><span class="pu-label">สแกน</span><span class="pu-count">×1</span>
+      </button>
+      <button class="powerup-btn" id="pu-shield" onclick="usePowerup('shield')" title="ป้องกันเหยียบระเบิด 1 ครั้ง">
+        <span class="pu-icon">🛡️</span><span class="pu-label">โล่</span><span class="pu-count">×1</span>
+      </button>
+      <button class="powerup-btn" id="pu-paper" onclick="usePowerup('paper')" title="เปิดช่องรอบข้าง 3×3">
+        <span class="pu-icon">🔍</span><span class="pu-label">เปเปอร์</span><span class="pu-count">×1</span>
+      </button>
+    </div>
   </div>
 </div>
 <script src="game.js"></script>
