@@ -299,6 +299,23 @@ body {
   color: rgba(216, 213, 248, 0.76);
   font-size: 14px;
 }
+.music-toggle {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 20;
+  min-width: 132px;
+  padding: 12px 16px;
+  border: 1px solid rgba(153, 110, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(15, 13, 53, 0.9);
+  color: #efeaff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(18, 8, 59, 0.42);
+  cursor: pointer;
+}
+.music-toggle:hover { filter: brightness(1.05); }
 @media (max-width: 980px) {
   .screen { padding: 18px; }
   .lobby { padding: 24px 20px 0; border-radius: 30px; }
@@ -360,6 +377,12 @@ body {
   .join-btn {
     min-height: 74px;
     font-size: 22px;
+  }
+  .music-toggle {
+    right: 10px;
+    bottom: 10px;
+    min-width: 118px;
+    padding: 11px 14px;
   }
 }
 
@@ -459,6 +482,10 @@ body {
 </head>
 <body>
 <div class="bg-particles" id="bgParticles"></div>
+<audio id="bgmAudio" loop preload="auto">
+  <source src="assets/minefield-taps.mp3" type="audio/mpeg">
+</audio>
+<button id="musicToggle" class="music-toggle" type="button">🎵 เพลง: เปิด</button>
 
 <!-- LOBBY -->
 <div class="screen active" id="lobbyScreen">
@@ -608,6 +635,8 @@ let conn = null;
 let roomCode = null;
 let oppName = 'ฝั่งตรงข้าม';
 let myName = '';
+let musicEnabled = true;
+let musicReady = false;
 
 // --- DOM refs ---
 const $ = id => document.getElementById(id);
@@ -615,14 +644,51 @@ const boardEl = $('board');
 const mineCountEl = $('mineCount');
 const timerEl = $('timer');
 const gameEl = $('gameEl');
+const bgmAudio = $('bgmAudio');
+const musicToggle = $('musicToggle');
 
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
 
 // --- Background ---
 (function(){ const c = $('bgParticles'); for(let i=0;i<40;i++){ const p=document.createElement('div');p.className='bg-particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(1+Math.random()*3)+'px';p.style.animationDuration=(10+Math.random()*20)+'s';p.style.animationDelay=(Math.random()*15)+'s';c.appendChild(p); } })();
 
+// --- Music ---
+function updateMusicToggle() {
+  musicToggle.textContent = musicEnabled ? '🎵 เพลง: เปิด' : '🔇 เพลง: ปิด';
+}
+
+function tryStartMusic() {
+  if (!musicEnabled || !bgmAudio) return;
+  bgmAudio.volume = 0.18;
+  bgmAudio.play().then(() => {
+    musicReady = true;
+  }).catch(() => {
+    musicReady = false;
+  });
+}
+
+function toggleMusic() {
+  musicEnabled = !musicEnabled;
+  if (!musicEnabled) {
+    bgmAudio.pause();
+  } else {
+    tryStartMusic();
+  }
+  updateMusicToggle();
+}
+
+musicToggle.addEventListener('click', toggleMusic);
+window.addEventListener('pointerdown', tryStartMusic, { once: true });
+window.addEventListener('keydown', tryStartMusic, { once: true });
+bgmAudio.addEventListener('error', () => {
+  musicEnabled = false;
+  updateMusicToggle();
+});
+updateMusicToggle();
+
 // ==================== SOLO MODE ====================
 function startSolo() {
+  tryStartMusic();
   cleanupNetwork();
   isSolo = true; isHost = false; mySeat = null;
   $('resetBtn').textContent = '🙂';
@@ -653,6 +719,7 @@ function cleanupNetwork() {
 function generateCode() { const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)]; return c; }
 
 async function createRoom() {
+  tryStartMusic();
   isSolo = false;
   document.getElementById('gameEl').classList.remove('solo-mode');
   $('backBtn').style.display = 'none';
@@ -672,7 +739,6 @@ async function createRoom() {
       conn = incoming;
       conn.on('open', () => {
         conn.on('data', handleData);
-        // Go to seat selection as host
         showScreen('seatScreen');
       });
     });
@@ -683,6 +749,7 @@ async function createRoom() {
 }
 
 async function joinRoom() {
+  tryStartMusic();
   isSolo = false;
   document.getElementById('gameEl').classList.remove('solo-mode');
   $('backBtn').style.display = 'none';
@@ -713,9 +780,7 @@ async function joinRoom() {
 function handleData(data) {
   switch (data.type) {
     case 'join':
-      // Host receives join request
       if (isHost) {
-        // Host goes to seat selection
         showScreen('seatScreen');
       }
       break;
