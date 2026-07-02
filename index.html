@@ -28,129 +28,340 @@ body {
   100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
 }
 .screen {
-  display: none; position: relative; z-index: 1; width: 100%; max-width: 1120px;
+  display: none; position: relative; z-index: 1; width: 100%; max-width: 1160px;
+  padding: 28px;
 }
 .screen.active { display: flex; flex-direction: column; align-items: center; }
 
 /* Lobby */
 .lobby {
-  background: rgba(22, 33, 62, 0.9); backdrop-filter: blur(12px);
-  padding: 44px 46px; border-radius: 22px; text-align: center;
-  box-shadow: 0 0 60px rgba(233, 69, 96, 0.2), 0 8px 32px rgba(0,0,0,0.5);
-  border: 1px solid rgba(233, 69, 96, 0.15); animation: gameIn 0.5s ease;
+  position: relative;
   width: 100%;
+  max-width: 1110px;
+  padding: 34px 38px 0;
+  border-radius: 42px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(15, 13, 53, 0.96), rgba(9, 10, 38, 0.98));
+  border: 2px solid rgba(132, 83, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(177, 110, 255, 0.12) inset, 0 28px 70px rgba(18, 8, 59, 0.72), 0 0 55px rgba(163, 76, 255, 0.25);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  animation: gameIn 0.5s ease;
+}
+.lobby::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(115, 76, 255, 0.18), transparent 26%),
+    radial-gradient(circle at 82% 12%, rgba(42, 228, 215, 0.12), transparent 24%),
+    radial-gradient(circle at 50% 100%, rgba(233, 69, 96, 0.12), transparent 36%);
+  pointer-events: none;
 }
 @keyframes gameIn { 0% { transform: scale(0.8) translateY(40px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-.lobby h1 { color: #e94560; margin: 0 0 8px 0; font-size: 32px; }
-.lobby .sub { color: #8899aa; margin: 0 0 24px 0; font-size: 14px; }
-.lobby .btn {
-  display: block; width: 100%; padding: 14px; border: none; border-radius: 12px;
-  font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 12px;
-}
-.btn-primary { background: linear-gradient(135deg, #e94560, #c73652); color: #fff; box-shadow: 0 4px 15px rgba(233,69,96,0.3); }
-.btn-primary:hover { transform: scale(1.03); box-shadow: 0 6px 25px rgba(233,69,96,0.5); }
-.btn-secondary { background: rgba(15, 52, 96, 0.8); color: #4ecca3; border: 1px solid rgba(78,204,163,0.3) !important; }
-.btn-secondary:hover { transform: scale(1.03); background: rgba(15, 52, 96, 1); }
-.btn-solo { background: linear-gradient(135deg, #4ecca3, #2ea87a); color: #fff; box-shadow: 0 4px 15px rgba(78,204,163,0.3); }
-.btn-solo:hover { transform: scale(1.03); box-shadow: 0 6px 25px rgba(78,204,163,0.5); }
-.landing-grid {
-  display: grid;
-  grid-template-columns: minmax(340px, 0.92fr) minmax(480px, 1.08fr);
-  gap: 34px;
-  align-items: center;
-}
-.landing-copy { text-align: left; max-width: 440px; }
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 12px; border-radius: 999px;
-  color: #4ecca3; background: rgba(78,204,163,0.08);
-  border: 1px solid rgba(78,204,163,0.18);
-  font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-}
-.landing-title {
-  margin: 18px 0 12px 0; font-size: clamp(36px, 6vw, 64px);
-  line-height: 0.95; color: #fff;
-}
-.landing-title span { color: #4ecca3; text-shadow: 0 0 28px rgba(78,204,163,0.35); }
-.landing-desc {
-  margin: 0 0 24px 0; color: #b7c3d4; font-size: 16px; line-height: 1.7;
-  max-width: 52ch;
-}
-.landing-actions { display: grid; gap: 12px; margin-bottom: 16px; }
-.landing-actions .btn { margin-bottom: 0; }
-.quick-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
-.tag {
-  padding: 8px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
-  background: rgba(15,52,96,0.75); color: #d7e4f3; border: 1px solid rgba(255,255,255,0.08);
-}
-.tag.accent { background: rgba(233,69,96,0.14); color: #ffd8df; border-color: rgba(233,69,96,0.25); }
-.hero-card {
-  position: relative; border-radius: 28px; overflow: hidden;
-  background: linear-gradient(180deg, rgba(14,18,44,0.95), rgba(8,10,26,0.98));
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
-  min-height: 620px;
-  display: flex;
-  flex-direction: column;
-}
-.hero-card::before {
-  content: ''; position: absolute; inset: -40%;
-  background: radial-gradient(circle at 30% 30%, rgba(78,204,163,0.22), transparent 35%),
-              radial-gradient(circle at 70% 28%, rgba(233,69,96,0.18), transparent 32%),
-              radial-gradient(circle at 50% 72%, rgba(59,130,246,0.16), transparent 30%);
-  filter: blur(16px); animation: heroGlow 8s ease-in-out infinite alternate;
-}
-@keyframes heroGlow { from { transform: translate3d(-2%, -2%, 0) scale(1); } to { transform: translate3d(2%, 2%, 0) scale(1.08); } }
-.hero-art {
-  position: relative; width: 100%; height: 100%; min-height: 0; display: block;
-}
-.hero-stage {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  padding: 22px;
-}
-.hero-illustration {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-  border-radius: 18px;
+.lobby-shell {
   position: relative;
   z-index: 1;
 }
-.hero-gridline { opacity: 0.22; }
-.hero-pulse { animation: pulseFloat 6s ease-in-out infinite; transform-origin: center; }
-@keyframes pulseFloat { 0%,100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-8px) scale(1.01); } }
-.hero-wave { opacity: 0.35; animation: waveMove 7s linear infinite; }
-@keyframes waveMove { from { transform: translateX(-16px); } to { transform: translateX(16px); } }
-@media (max-width: 900px) {
-  .landing-grid { grid-template-columns: 1fr; }
-  .landing-copy { text-align: center; }
-  .landing-desc { margin-left: auto; margin-right: auto; }
-  .quick-tags { justify-content: center; }
-  .hero-card { min-height: 520px; }
-  .hero-art { min-height: 0; }
+.lobby-topbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
 }
-@media (max-width: 560px) {
-  .lobby { padding: 22px; }
-  .landing-title { font-size: 40px; }
-  .landing-actions, .join-row { display: grid; grid-template-columns: 1fr; }
-  .join-row input { width: 100%; }
-  .join-row .btn { width: 100%; }
-  .hero-card { min-height: 360px; }
-  .hero-art { min-height: 0; }
+.topbar-item {
+  width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #d8d5f8;
+  font-size: 13px;
 }
-.lobby .divider { color: #556; margin: 16px 0; font-size: 13px; display: flex; align-items: center; gap: 12px; }
-.lobby .divider::before, .lobby .divider::after { content: ''; flex: 1; height: 1px; background: #334; }
-.join-row { display: flex; gap: 8px; }
-.join-row input {
-  flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #334; background: #0a0a1a;
-  color: #fff; font-size: 18px; text-align: center; letter-spacing: 4px; text-transform: uppercase; font-weight: bold;
+.topbar-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: linear-gradient(180deg, rgba(63, 41, 119, 0.95), rgba(30, 22, 66, 0.95));
+  border: 1px solid rgba(153, 110, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 22px rgba(115, 76, 255, 0.18);
 }
-.join-row input:focus { outline: none; border-color: #e94560; }
-.join-row .btn { width: auto; padding: 14px 24px; margin-bottom: 0; }
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+.brand-bomb {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 58px;
+  background: radial-gradient(circle at 35% 30%, #8d56ff 0%, #5f21d8 45%, #2d0c65 100%);
+  box-shadow: 0 0 20px rgba(232, 95, 255, 0.35), 0 0 48px rgba(104, 44, 255, 0.28);
+}
+.brand-copy {
+  text-align: left;
+}
+.brand-title {
+  margin: 0;
+  font-size: clamp(46px, 7vw, 72px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: #ff78bd;
+  text-shadow: 0 0 26px rgba(255, 111, 196, 0.28);
+}
+.brand-sub {
+  margin: 10px 0 0;
+  color: #cabdf8;
+  font-size: 18px;
+}
+.brand-sub .sparkle { color: #ff8fe0; }
+.menu-wrap {
+  width: min(760px, 100%);
+  margin: 28px auto 18px;
+}
+.menu-button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  align-items: center;
+  width: 100%;
+  min-height: 126px;
+  margin: 0 0 18px;
+  padding: 0 32px;
+  border-radius: 28px;
+  border: 2px solid rgba(255,255,255,0.14);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  overflow: hidden;
+}
+.menu-button:hover { transform: translateY(-2px) scale(1.01); filter: brightness(1.04); }
+.menu-button::before,
+.menu-button::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  transform: rotate(45deg);
+  opacity: 0.22;
+  right: 28px;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.menu-button::after {
+  width: 26px;
+  height: 26px;
+  right: 72px;
+  top: 26px;
+}
+.menu-button.solo {
+  background: linear-gradient(135deg, rgba(11, 122, 128, 0.96), rgba(5, 91, 110, 0.94));
+  box-shadow: 0 0 28px rgba(31, 226, 204, 0.22), inset 0 1px 0 rgba(255,255,255,0.16);
+  border-color: rgba(94, 244, 232, 0.62);
+}
+.menu-button.room {
+  background: linear-gradient(135deg, rgba(198, 33, 97, 0.96), rgba(233, 68, 139, 0.94));
+  box-shadow: 0 0 28px rgba(255, 72, 162, 0.22), inset 0 1px 0 rgba(255,255,255,0.16);
+  border-color: rgba(255, 138, 196, 0.65);
+}
+.menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 74px;
+  font-size: 54px;
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+.menu-text {
+  padding-left: 28px;
+  text-align: left;
+  color: #fff;
+}
+.menu-title {
+  display: block;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  line-height: 1.05;
+}
+.menu-desc {
+  display: block;
+  margin-top: 6px;
+  font-size: 18px;
+  color: rgba(255,255,255,0.82);
+}
+.join-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 14px;
+  margin-top: 6px;
+}
+.join-input {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 92px;
+  padding: 0 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(18, 15, 58, 0.96), rgba(11, 10, 42, 0.96));
+  border: 2px solid rgba(104, 59, 216, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.join-input span {
+  font-size: 28px;
+  color: #b178ff;
+}
+.join-input input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  color: #efeaff;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  outline: none;
+}
+.join-input input::placeholder {
+  letter-spacing: 0;
+  color: rgba(196, 183, 255, 0.46);
+  font-size: 20px;
+  font-weight: 600;
+}
+.join-btn {
+  min-height: 92px;
+  border: 2px solid rgba(255, 138, 196, 0.7);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #ff4b9c, #c83186);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 0 26px rgba(255, 67, 152, 0.24), inset 0 1px 0 rgba(255,255,255,0.16);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.join-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 0 34px rgba(255, 67, 152, 0.34);
+}
+.join-hint {
+  margin: 14px 0 24px;
+  color: #cabdf8;
+  font-size: 16px;
+}
+.join-hint .sparkle { color: #ff8fe0; }
+.feature-strip {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0 -38px;
+  padding: 20px 38px 22px;
+  background: linear-gradient(180deg, rgba(34, 34, 92, 0.76), rgba(19, 17, 59, 0.88));
+  border-top: 1px solid rgba(121, 95, 233, 0.4);
+}
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  color: #d8d5f8;
+}
+.feature-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: linear-gradient(180deg, rgba(83, 44, 177, 0.95), rgba(48, 22, 106, 0.95));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 0 18px rgba(124, 69, 255, 0.2);
+}
+.feature-title {
+  display: block;
+  color: #ff8fe0;
+  font-size: 17px;
+  font-weight: 700;
+}
+.feature-desc {
+  display: block;
+  margin-top: 2px;
+  color: rgba(216, 213, 248, 0.76);
+  font-size: 14px;
+}
+@media (max-width: 980px) {
+  .screen { padding: 18px; }
+  .lobby { padding: 24px 20px 0; border-radius: 30px; }
+  .lobby-topbar {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-row {
+    flex-direction: column;
+    justify-content: center;
+  }
+  .brand-copy { text-align: center; }
+  .menu-button { grid-template-columns: 96px 1fr; min-height: 110px; }
+  .menu-icon { font-size: 44px; height: 60px; }
+  .menu-text { padding-left: 20px; }
+  .join-row { grid-template-columns: 1fr; }
+  .feature-strip {
+    grid-template-columns: 1fr;
+    margin: 0 -20px;
+    padding: 18px 20px 20px;
+  }
+}
+@media (max-width: 640px) {
+  .screen { padding: 10px; }
+  .topbar-item { width: 62px; font-size: 12px; }
+  .topbar-icon { width: 50px; height: 50px; font-size: 24px; }
+  .brand-bomb { width: 82px; height: 82px; font-size: 48px; }
+  .brand-title { font-size: 42px; }
+  .brand-sub { font-size: 15px; }
+  .menu-wrap { margin-top: 22px; }
+  .menu-button {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 18px 22px 22px;
+    text-align: center;
+  }
+  .menu-icon {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+  }
+  .menu-text {
+    padding-left: 0;
+    text-align: center;
+  }
+  .menu-title { font-size: 24px; }
+  .menu-desc { font-size: 16px; }
+  .join-input {
+    min-height: 80px;
+    padding: 0 18px;
+    gap: 12px;
+  }
+  .join-input input {
+    font-size: 26px;
+    letter-spacing: 0.16em;
+  }
+  .join-btn {
+    min-height: 74px;
+    font-size: 22px;
+  }
+}
 
 /* Waiting */
 .waiting { text-align: center; padding: 40px; }
@@ -252,29 +463,72 @@ body {
 <!-- LOBBY -->
 <div class="screen active" id="lobbyScreen">
   <div class="lobby">
-    <div class="landing-grid">
-      <div class="landing-copy">
-        <div class="eyebrow">Real-time Puzzle Arena</div>
-        <h1 class="landing-title">Minesweeper <span>X</span></h1>
-        <p class="landing-desc">เล่นคนเดียวแบบคลาสสิก หรือสร้างห้องชวนเพื่อนแข่งกันเปิดพื้นที่ให้มากที่สุด แบบออนไลน์ Real-time</p>
-        <div class="quick-tags">
-          <div class="tag accent">Solo Mode</div>
-          <div class="tag">2P Online</div>
-          <div class="tag">Fast Sync</div>
-        </div>
-        <div class="landing-actions">
-          <button class="btn btn-solo" onclick="startSolo()">👤 เล่นคนเดียว</button>
-          <button class="btn btn-primary" onclick="createRoom()">🎮 สร้างห้องใหม่</button>
-        </div>
-        <div class="divider">หรือเข้าร่วมด้วยรหัสห้อง</div>
-        <div class="join-row">
-          <input id="roomCodeInput" placeholder="รหัสห้อง" maxlength="4" onkeydown="if(event.key==='Enter') joinRoom()">
-          <button class="btn btn-primary" onclick="joinRoom()">เข้าร่วม</button>
+    <div class="lobby-shell">
+      <div class="lobby-topbar" aria-hidden="true">
+        <div class="topbar-item"><div class="topbar-icon">🏆</div><div>อันดับ</div></div>
+        <div class="topbar-item"><div class="topbar-icon">🎖️</div><div>ความสำเร็จ</div></div>
+        <div class="topbar-item"><div class="topbar-icon">👥</div><div>เพื่อน</div></div>
+        <div class="topbar-item"><div class="topbar-icon">🧑🏻</div><div>โปรไฟล์</div></div>
+        <div class="topbar-item"><div class="topbar-icon">⚙️</div><div>ตั้งค่า</div></div>
+      </div>
+
+      <div class="brand-row">
+        <div class="brand-bomb" aria-hidden="true">💣</div>
+        <div class="brand-copy">
+          <h1 class="brand-title">Minesweeper</h1>
+          <p class="brand-sub"><span class="sparkle">✦</span> ระเบิดทุกช่อง ระวังทุกก้าว สนุกไปกับเพื่อน ๆ ออนไลน์! <span class="sparkle">✦</span></p>
         </div>
       </div>
-      <div class="hero-card" aria-hidden="true">
-        <div class="hero-stage">
-          <img class="hero-illustration" src="assets/ref.png" alt="Minesweeper reference illustration">
+
+      <div class="menu-wrap">
+        <button class="menu-button solo" onclick="startSolo()">
+          <span class="menu-icon" aria-hidden="true">👤</span>
+          <span class="menu-text">
+            <span class="menu-title">เล่นคนเดียว</span>
+            <span class="menu-desc">ท้าทายตัวเองให้เก่งขึ้น</span>
+          </span>
+        </button>
+
+        <button class="menu-button room" onclick="createRoom()">
+          <span class="menu-icon" aria-hidden="true">🎮</span>
+          <span class="menu-text">
+            <span class="menu-title">สร้างห้องใหม่</span>
+            <span class="menu-desc">ชวนเพื่อนมาเล่นด้วยกัน</span>
+          </span>
+        </button>
+
+        <div class="join-row">
+          <label class="join-input">
+            <span aria-hidden="true">🔢</span>
+            <input id="roomCodeInput" placeholder="รหัสห้อง" maxlength="4" onkeydown="if(event.key==='Enter') joinRoom()">
+          </label>
+          <button class="join-btn" onclick="joinRoom()">↪ เข้าร่วม</button>
+        </div>
+
+        <p class="join-hint"><span class="sparkle">✦</span> ใส่รหัสห้องเพื่อเข้าร่วมเกมกับเพื่อน <span class="sparkle">✦</span></p>
+      </div>
+    </div>
+
+    <div class="feature-strip">
+      <div class="feature-item">
+        <div class="feature-badge">🎲</div>
+        <div>
+          <span class="feature-title">คลาสสิกที่คุณรัก</span>
+          <span class="feature-desc">เล่นง่าย แต่ท้าทาย</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-badge">🛡️</div>
+        <div>
+          <span class="feature-title">เล่นกับเพื่อน</span>
+          <span class="feature-desc">สร้างห้อง แชร์รหัส และสนุกไปด้วยกัน</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-badge">✨</div>
+        <div>
+          <span class="feature-title">อัปเดตสม่ำเสมอ</span>
+          <span class="feature-desc">โหมดใหม่ และของรางวัลรอคุณอยู่</span>
         </div>
       </div>
     </div>
@@ -490,7 +744,6 @@ function handleData(data) {
       }
       break;
     case 'state_sync':
-      // Guest receives full state from host
       applyState(data);
       break;
     case 'game_over':
@@ -519,7 +772,6 @@ function handleData(data) {
       updateScoresUI();
       break;
     case 'reset_game':
-      // Guest receives reset
       initLocal(data.board, data.mines, data.scores, data.timer, true);
       renderBoard();
       updateScoresUI();
@@ -551,10 +803,8 @@ function confirmSeat() {
   mySeat = selectedSeat;
   myName = 'ฉัน';
   if (isHost) {
-    // Host chooses seat, guest gets the other
     const guestSeat = mySeat === 'left' ? 'right' : 'left';
     conn.send({ type: 'seat_confirm', seat: guestSeat, oppName: myName, board: null, mines: [], scores: [0, 0], timer: 0, firstClick: true });
-    // Prepare board
     initLocal(null, null, [0,0], 0, true);
     startGame();
     showScreen('gameScreen');
@@ -589,7 +839,6 @@ function initBoardFrom(bd, mines, scores, t, fc) {
 }
 
 function startGame() {
-  // Setup UI
   $('nameLeft').textContent = mySeat === 'left' ? 'ฉัน 👈' : (isHost ? 'คุณ' : oppName);
   $('nameRight').textContent = mySeat === 'right' ? 'ฉัน 👈' : (isHost ? 'คุณ' : oppName);
   $('scoreLeft').textContent = '0';
@@ -597,7 +846,6 @@ function startGame() {
   $('resetBtn').textContent = '🙂';
   updateMineCount();
   if (!isHost && firstClick) {
-    // Guest needs to wait for host to place mines on first click
     renderBoard();
   }
 }
