@@ -24,6 +24,14 @@ let musicEnabled = true;
 // Power-ups state (ponytail: simple object, per-player count)
 let powerups = { scan: 1, shield: 1, paper: 1 };
 let shieldActive = false;
+// Combo state (ponytail: simple object)
+let combo = { count: 0, lastTime: 0, multiplier: 1, timer: null };
+const COMBO_WINDOW = 1500; // ms
+const COMBO_TIERS = [
+  { min: 3, mult: 1.5, label: '✨ COMBO!' },
+  { min: 5, mult: 2, label: '⚡ UNSTOPPABLE!' },
+  { min: 8, mult: 3, label: '🔥 ON FIRE!' }
+];
 const $ = id => document.getElementById(id);
 const boardEl = $('board');
 const mineCountEl = $('mineCount');
@@ -121,6 +129,45 @@ function getCurrentPlayerSeat() {
   return totalClicks % 2 === 0 ? 'left' : 'right';
 }
 let totalClicks = 0;
+
+// Combo system: track consecutive clicks within COMBO_WINDOW
+function registerCombo() {
+  const now = Date.now();
+  if (now - combo.lastTime <= COMBO_WINDOW) {
+    combo.count++;
+  } else {
+    combo.count = 1;
+  }
+  combo.lastTime = now;
+  // Find highest tier matched (ponytail: reverse then find)
+  const tier = [...COMBO_TIERS].reverse().find(t => combo.count >= t.min);
+  combo.multiplier = tier ? tier.mult : 1;
+  // Reset timeout
+  clearTimeout(combo.timer);
+  combo.timer = setTimeout(resetCombo, COMBO_WINDOW + 200);
+  updateComboUI(tier);
+  if (tier) showToast(tier.label + ' ×' + combo.multiplier, 'info');
+}
+
+function resetCombo() {
+  combo.count = 0;
+  combo.multiplier = 1;
+  const el = document.getElementById('comboDisplay');
+  if (el) el.classList.add('hidden');
+}
+
+function updateComboUI(tier) {
+  const el = document.getElementById('comboDisplay');
+  if (!el) return;
+  if (combo.count >= 3) {
+    el.classList.remove('hidden');
+    el.querySelector('.combo-count').textContent = '×' + combo.multiplier;
+    el.querySelector('.combo-label').textContent = tier ? tier.label : 'COMBO';
+    el.className = 'combo-display tier-' + (tier ? Math.min(COMBO_TIERS.indexOf(tier) + 1, 3) : 1);
+  } else {
+    el.classList.add('hidden');
+  }
+}
 (function(){ const c = $('bgParticles'); for(let i=0;i<40;i++){ const p=document.createElement('div');p.className='bg-particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(1+Math.random()*3)+'px';p.style.animationDuration=(10+Math.random()*20)+'s';p.style.animationDelay=(Math.random()*15)+'s';c.appendChild(p); } })();
 function updateMusicToggle() { musicToggle.textContent = musicEnabled ? '🎵 เพลง: เปิด' : '🔇 เพลง: ปิด'; }
 function tryStartMusic() {
@@ -333,8 +380,10 @@ function initLocal(existingBoard, existingMines, scores, t, fc) {
   pendingPaper = false;
   totalClicks = 0;
   powerups = { scan: 1, shield: 1, paper: 1 };
+  combo = { count: 0, lastTime: 0, multiplier: 1, timer: null };
   document.body.classList.remove('shield-ready');
   ['scan','shield','paper'].forEach(updatePowerupUI);
+  resetCombo();
   clearInterval(timerInterval);
   if (!fc) timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
 }
@@ -411,7 +460,10 @@ function processClick(r, c, playerIdx) {
   }
   const seen = new Set();
   const revealedCount = floodFill(r, c, seen);
-  score[playerIdx] += revealedCount;
+  registerCombo(); // Combo system: track this click
+  const baseScore = revealedCount;
+  const finalScore = Math.round(baseScore * combo.multiplier);
+  score[playerIdx] += finalScore;
   totalClicks++;
   renderBoard();
   animateReveal();
