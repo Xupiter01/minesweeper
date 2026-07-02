@@ -32,8 +32,6 @@ body {
   padding: 28px;
 }
 .screen.active { display: flex; flex-direction: column; align-items: center; }
-
-/* Lobby */
 .lobby {
   position: relative;
   width: 100%;
@@ -108,9 +106,7 @@ body {
   background: radial-gradient(circle at 35% 30%, #8d56ff 0%, #5f21d8 45%, #2d0c65 100%);
   box-shadow: 0 0 20px rgba(232, 95, 255, 0.35), 0 0 48px rgba(104, 44, 255, 0.28);
 }
-.brand-copy {
-  text-align: left;
-}
+.brand-copy { text-align: left; }
 .brand-title {
   margin: 0;
   font-size: clamp(46px, 7vw, 72px);
@@ -385,8 +381,6 @@ body {
     padding: 11px 14px;
   }
 }
-
-/* Waiting */
 .waiting { text-align: center; padding: 40px; }
 .waiting .room-code { font-size: 48px; letter-spacing: 8px; color: #4ecca3; font-weight: bold; font-family: monospace; margin: 16px 0; text-shadow: 0 0 30px rgba(78,204,163,0.3); }
 .waiting .status { color: #8899aa; font-size: 16px; margin: 8px 0; }
@@ -394,8 +388,6 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .waiting .share-link { margin-top: 16px; padding: 12px; background: #0a0a1a; border-radius: 8px; color: #556; font-size: 13px; word-break: break-all; cursor: pointer; border: 1px solid #334; }
 .waiting .share-link span { color: #4ecca3; }
-
-/* Seat Select */
 .seat-select { display: flex; gap: 16px; margin: 20px 0; }
 .seat-btn {
   flex: 1; padding: 24px; border-radius: 16px; border: 2px solid #334; cursor: pointer;
@@ -406,8 +398,6 @@ body {
 .seat-btn .icon { font-size: 40px; margin-bottom: 8px; }
 .seat-btn .label { color: #fff; font-weight: bold; font-size: 16px; }
 .seat-btn .desc { color: #8899aa; font-size: 12px; margin-top: 4px; }
-
-/* Game */
 .game-container {
   position: relative; z-index: 1;
   background: rgba(22, 33, 62, 0.9); backdrop-filter: blur(12px);
@@ -415,9 +405,7 @@ body {
   box-shadow: 0 0 60px rgba(233, 69, 96, 0.2), 0 8px 32px rgba(0,0,0,0.5);
   border: 1px solid rgba(233, 69, 96, 0.15); animation: gameIn 0.5s ease;
 }
-.players {
-  display: flex; gap: 12px; margin-bottom: 12px;
-}
+.players { display: flex; gap: 12px; margin-bottom: 12px; }
 .player-card {
   flex: 1; padding: 10px 14px; border-radius: 12px; text-align: center;
   border: 2px solid #334; position: relative; transition: 0.3s;
@@ -486,8 +474,6 @@ body {
   <source src="assets/Minefield Taps.mp3" type="audio/mpeg">
 </audio>
 <button id="musicToggle" class="music-toggle" type="button">🎵 เพลง: เปิด</button>
-
-<!-- LOBBY -->
 <div class="screen active" id="lobbyScreen">
   <div class="lobby">
     <div class="lobby-shell">
@@ -498,7 +484,6 @@ body {
         <div class="topbar-item"><div class="topbar-icon">🧑🏻</div><div>โปรไฟล์</div></div>
         <div class="topbar-item"><div class="topbar-icon">⚙️</div><div>ตั้งค่า</div></div>
       </div>
-
       <div class="brand-row">
         <div class="brand-bomb" aria-hidden="true">💣</div>
         <div class="brand-copy">
@@ -506,7 +491,6 @@ body {
           <p class="brand-sub"><span class="sparkle">✦</span> ระเบิดทุกช่อง ระวังทุกก้าว สนุกไปกับเพื่อน ๆ ออนไลน์! <span class="sparkle">✦</span></p>
         </div>
       </div>
-
       <div class="menu-wrap">
         <button class="menu-button solo" onclick="startSolo()">
           <span class="menu-icon" aria-hidden="true">👤</span>
@@ -515,7 +499,6 @@ body {
             <span class="menu-desc">ท้าทายตัวเองให้เก่งขึ้น</span>
           </span>
         </button>
-
         <button class="menu-button room" onclick="createRoom()">
           <span class="menu-icon" aria-hidden="true">🎮</span>
           <span class="menu-text">
@@ -523,7 +506,6 @@ body {
             <span class="menu-desc">ชวนเพื่อนมาเล่นด้วยกัน</span>
           </span>
         </button>
-
         <div class="join-row">
           <label class="join-input">
             <span aria-hidden="true">🔢</span>
@@ -531,38 +513,16 @@ body {
           </label>
           <button class="join-btn" onclick="joinRoom()">↪ เข้าร่วม</button>
         </div>
-
         <p class="join-hint"><span class="sparkle">✦</span> ใส่รหัสห้องเพื่อเข้าร่วมเกมกับเพื่อน <span class="sparkle">✦</span></p>
       </div>
     </div>
-
     <div class="feature-strip">
-      <div class="feature-item">
-        <div class="feature-badge">🎲</div>
-        <div>
-          <span class="feature-title">คลาสสิกที่คุณรัก</span>
-          <span class="feature-desc">เล่นง่าย แต่ท้าทาย</span>
-        </div>
-      </div>
-      <div class="feature-item">
-        <div class="feature-badge">🛡️</div>
-        <div>
-          <span class="feature-title">เล่นกับเพื่อน</span>
-          <span class="feature-desc">สร้างห้อง แชร์รหัส และสนุกไปด้วยกัน</span>
-        </div>
-      </div>
-      <div class="feature-item">
-        <div class="feature-badge">✨</div>
-        <div>
-          <span class="feature-title">อัปเดตสม่ำเสมอ</span>
-          <span class="feature-desc">โหมดใหม่ และของรางวัลรอคุณอยู่</span>
-        </div>
-      </div>
+      <div class="feature-item"><div class="feature-badge">🎲</div><div><span class="feature-title">คลาสสิกที่คุณรัก</span><span class="feature-desc">เล่นง่าย แต่ท้าทาย</span></div></div>
+      <div class="feature-item"><div class="feature-badge">🛡️</div><div><span class="feature-title">เล่นกับเพื่อน</span><span class="feature-desc">สร้างห้อง แชร์รหัส และสนุกไปด้วยกัน</span></div></div>
+      <div class="feature-item"><div class="feature-badge">✨</div><div><span class="feature-title">อัปเดตสม่ำเสมอ</span><span class="feature-desc">โหมดใหม่ และของรางวัลรอคุณอยู่</span></div></div>
     </div>
   </div>
 </div>
-
-<!-- WAITING -->
 <div class="screen" id="waitingScreen">
   <div class="lobby waiting" style="width:100%">
     <div style="color:#8899aa;font-size:14px;margin-bottom:8px;">🏠 รหัสห้องของคุณ</div>
@@ -572,42 +532,22 @@ body {
     <div class="share-link" id="shareLink" onclick="copyLink()">📋 คลิกเพื่อคัดลอกลิงก์: <span id="shareUrl">กำลังโหลด...</span></div>
   </div>
 </div>
-
-<!-- SEAT SELECT -->
 <div class="screen" id="seatScreen">
   <div class="lobby" style="width:100%">
     <h2 style="color:#fff;margin:0 0 8px 0;">เลือกที่นั่ง</h2>
     <p style="color:#8899aa;margin:0 0 16px 0;">ฝ่ายซ้ายเริ่มก่อน</p>
     <div class="seat-select">
-      <div class="seat-btn" id="seatLeft" onclick="selectSeat('left')">
-        <div class="icon">🟦</div>
-        <div class="label">ฝั่งซ้าย</div>
-        <div class="desc">เริ่มก่อน</div>
-      </div>
-      <div class="seat-btn" id="seatRight" onclick="selectSeat('right')">
-        <div class="icon">🟥</div>
-        <div class="label">ฝั่งขวา</div>
-        <div class="desc">เริ่มทีหลัง</div>
-      </div>
+      <div class="seat-btn" id="seatLeft" onclick="selectSeat('left')"><div class="icon">🟦</div><div class="label">ฝั่งซ้าย</div><div class="desc">เริ่มก่อน</div></div>
+      <div class="seat-btn" id="seatRight" onclick="selectSeat('right')"><div class="icon">🟥</div><div class="label">ฝั่งขวา</div><div class="desc">เริ่มทีหลัง</div></div>
     </div>
     <button class="btn btn-primary" id="seatConfirmBtn" disabled onclick="confirmSeat()">ยืนยันที่นั่ง</button>
   </div>
 </div>
-
-<!-- GAME -->
 <div class="screen" id="gameScreen" style="width:100%;max-width:560px">
   <div class="game-container" id="gameEl">
     <div class="players">
-      <div class="player-card left-card" id="cardLeft">
-        <div class="seat-icon">🟦</div>
-        <div class="pname" id="nameLeft">ฝั่งซ้าย</div>
-        <div class="pscore" id="scoreLeft">0</div>
-      </div>
-      <div class="player-card right-card" id="cardRight">
-        <div class="seat-icon">🟥</div>
-        <div class="pname" id="nameRight">ฝั่งขวา</div>
-        <div class="pscore" id="scoreRight">0</div>
-      </div>
+      <div class="player-card left-card" id="cardLeft"><div class="seat-icon">🟦</div><div class="pname" id="nameLeft">ฝั่งซ้าย</div><div class="pscore" id="scoreLeft">0</div></div>
+      <div class="player-card right-card" id="cardRight"><div class="seat-icon">🟥</div><div class="pname" id="nameRight">ฝั่งขวา</div><div class="pscore" id="scoreRight">0</div></div>
     </div>
     <div class="header">
       <div id="mineCount">000</div>
@@ -618,12 +558,9 @@ body {
     <div id="board" class="board"></div>
   </div>
 </div>
-
 <script>
 const COLS = 9, ROWS = 9, MINES = 10;
 const colors = ['', '#4ecca3', '#3b82f6', '#e94560', '#9b59b6', '#1abc9c', '#f39c12', '#e74c3c', '#95a5a6'];
-
-// --- State ---
 let board, revealed, flags, minePos;
 let gameOver = false, firstClick = true, timer = 0, timerInterval;
 let score = [0, 0];
@@ -636,8 +573,6 @@ let roomCode = null;
 let oppName = 'ฝั่งตรงข้าม';
 let myName = '';
 let musicEnabled = true;
-let musicReady = false;
-
 const $ = id => document.getElementById(id);
 const boardEl = $('board');
 const mineCountEl = $('mineCount');
@@ -645,29 +580,23 @@ const timerEl = $('timer');
 const gameEl = $('gameEl');
 const bgmAudio = $('bgmAudio');
 const musicToggle = $('musicToggle');
-
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
 (function(){ const c = $('bgParticles'); for(let i=0;i<40;i++){ const p=document.createElement('div');p.className='bg-particle';p.style.left=Math.random()*100+'%';p.style.width=p.style.height=(1+Math.random()*3)+'px';p.style.animationDuration=(10+Math.random()*20)+'s';p.style.animationDelay=(Math.random()*15)+'s';c.appendChild(p); } })();
-
-function updateMusicToggle() {
-  musicToggle.textContent = musicEnabled ? '🎵 เพลง: เปิด' : '🔇 เพลง: ปิด';
-}
+function updateMusicToggle() { musicToggle.textContent = musicEnabled ? '🎵 เพลง: เปิด' : '🔇 เพลง: ปิด'; }
 function tryStartMusic() {
   if (!musicEnabled || !bgmAudio) return;
   bgmAudio.volume = 0.18;
-  bgmAudio.play().then(() => {
-    musicReady = true;
-  }).catch(() => {
-    musicReady = false;
-  });
+  bgmAudio.play().catch(() => {});
+}
+function restartMusic() {
+  if (!musicEnabled || !bgmAudio) return;
+  bgmAudio.currentTime = 0;
+  tryStartMusic();
 }
 function toggleMusic() {
   musicEnabled = !musicEnabled;
-  if (!musicEnabled) {
-    bgmAudio.pause();
-  } else {
-    tryStartMusic();
-  }
+  if (!musicEnabled) bgmAudio.pause();
+  else tryStartMusic();
   updateMusicToggle();
 }
 musicToggle.addEventListener('click', toggleMusic);
@@ -678,7 +607,6 @@ bgmAudio.addEventListener('error', () => {
   updateMusicToggle();
 });
 updateMusicToggle();
-
 function startSolo() {
   tryStartMusic();
   cleanupNetwork();
@@ -761,15 +689,13 @@ async function joinRoom() {
 }
 function handleData(data) {
   switch (data.type) {
-    case 'join':
-      if (isHost) showScreen('seatScreen');
-      break;
+    case 'join': if (isHost) showScreen('seatScreen'); break;
     case 'seat_confirm':
       if (!isHost) {
         mySeat = data.seat;
         oppName = data.oppName;
-        if (data.board) { initBoardFrom(data.board, data.mines, data.scores, data.timer, data.firstClick); }
-        else { initLocal(null, null, [0,0], 0, true); }
+        if (data.board) initBoardFrom(data.board, data.mines, data.scores, data.timer, data.firstClick);
+        else initLocal(null, null, [0,0], 0, true);
         startGame();
         showScreen('gameScreen');
       }
@@ -777,9 +703,7 @@ function handleData(data) {
     case 'click':
       if (isHost) {
         const _r = processClick(data.r, data.c, data.player);
-        if (_r && !gameOver) {
-          conn.send({ type: 'state_sync', board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos], score, timer, firstClick, gameOver });
-        }
+        if (_r && !gameOver) conn.send({ type: 'state_sync', board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos], score, timer, firstClick, gameOver });
       }
       break;
     case 'flag':
@@ -788,9 +712,7 @@ function handleData(data) {
         conn.send({ type: 'state_sync', board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos], score, timer, firstClick, gameOver });
       }
       break;
-    case 'state_sync':
-      applyState(data);
-      break;
+    case 'state_sync': applyState(data); break;
     case 'game_over':
       gameOver = true;
       clearInterval(timerInterval);
@@ -823,10 +745,9 @@ function handleData(data) {
       $('resetBtn').textContent = '🙂';
       gameOver = false;
       firstClick = false;
+      restartMusic();
       break;
-    case 'reset_request':
-      if (isHost) resetGame();
-      break;
+    case 'reset_request': if (isHost) resetGame(); break;
     case 'opponent_left':
       showToast('👋 คู่ต่อสู้ออกจากเกม', 'error');
       gameOver = true;
@@ -868,9 +789,7 @@ function initLocal(existingBoard, existingMines, scores, t, fc) {
   firstClick = fc;
   gameOver = false;
   clearInterval(timerInterval);
-  if (!fc) {
-    timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
-  }
+  if (!fc) timerInterval = setInterval(() => { timer++; timerEl.textContent = String(timer).padStart(3,'0'); timerEl.classList.remove('pulse'); void timerEl.offsetWidth; timerEl.classList.add('pulse'); }, 1000);
 }
 function initBoardFrom(bd, mines, scores, t, fc) {
   board = bd; minePos = new Set(mines); score = scores; timer = t; firstClick = fc;
@@ -908,9 +827,7 @@ function floodFill(r, c, seen) {
   seen.add(key);
   revealed[r][c] = true;
   let count = 1;
-  if (board[r][c] === 0) {
-    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) count += floodFill(r+dr, c+dc, seen);
-  }
+  if (board[r][c] === 0) for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) count += floodFill(r+dr, c+dc, seen);
   return count;
 }
 function processClick(r, c, playerIdx) {
@@ -921,9 +838,7 @@ function processClick(r, c, playerIdx) {
     const loserSeat = playerIdx === 0 ? 'left' : 'right';
     gameOver = true; clearInterval(timerInterval);
     for (const pos of minePos) { const [mr,mc]=pos.split(',').map(Number); revealed[mr][mc]=true; }
-    if (isHost) {
-      conn.send({ type: 'game_over', winner: winnerSeat, loser: loserSeat, hitR: r, hitC: c, scores: score, board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos] });
-    }
+    if (isHost) conn.send({ type: 'game_over', winner: winnerSeat, loser: loserSeat, hitR: r, hitC: c, scores: score, board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos] });
     renderBoard();
     animateMineExplosion(r, c);
     updateScoresUI();
@@ -962,9 +877,7 @@ function checkWin(playerIdx) {
     gameOver = true; clearInterval(timerInterval); $('resetBtn').textContent = '😎';
     const winnerIdx = score[0] > score[1] ? 0 : (score[1] > score[0] ? 1 : -1);
     const isTie = winnerIdx === -1;
-    if (isHost) {
-      conn.send({ type: 'game_over', winner: winnerIdx === 0 ? 'left' : 'right', tie: isTie, scores: score, board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos] });
-    }
+    if (isHost) conn.send({ type: 'game_over', winner: winnerIdx === 0 ? 'left' : 'right', tie: isTie, scores: score, board: board.map(r=>[...r]), revealed: revealed.map(r=>[...r]), flags: flags.map(r=>[...r]), minePos: [...minePos] });
     if (isSolo) { showToast('🎉 ชนะแล้ว!', 'info'); showPopup('🎉 ชนะ!'); createConfetti(); }
     else if (isTie) { showToast('🤝 เสมอกัน!', 'info'); showPopup('🤝 เสมอ!'); }
     else {
@@ -982,9 +895,7 @@ function onCellClick(e, r, c) {
   if (isHost) {
     const playerIdx = mySeat === 'left' ? 0 : 1;
     const result = processClick(r, c, playerIdx);
-    if (result) {
-      conn.send({ type: 'state_sync', board, revealed: revealed.map(row=>[...row]), flags: flags.map(row=>[...row]), minePos: [...minePos], score, timer, firstClick, gameOver });
-    }
+    if (result) conn.send({ type: 'state_sync', board, revealed: revealed.map(row=>[...row]), flags: flags.map(row=>[...row]), minePos: [...minePos], score, timer, firstClick, gameOver });
   } else {
     const playerIdx = mySeat === 'left' ? 0 : 1;
     conn.send({ type: 'click', r, c, player: playerIdx });
@@ -999,9 +910,7 @@ function onCellRightClick(e, r, c) {
   if (isHost) {
     processFlag(r, c);
     conn.send({ type: 'state_sync', board, revealed: revealed.map(row=>[...row]), flags: flags.map(row=>[...row]), minePos: [...minePos], score, timer, firstClick, gameOver });
-  } else {
-    conn.send({ type: 'flag', r, c });
-  }
+  } else conn.send({ type: 'flag', r, c });
 }
 function applyState(data) {
   board = data.board;
@@ -1076,10 +985,7 @@ function explodeParticles(el) {
     p.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0)`,opacity:0}],{duration:400+Math.random()*400,easing:'ease-out'}).onfinish = ()=>p.remove();
   }
 }
-function updateScoresUI() {
-  $('scoreLeft').textContent = score[0];
-  $('scoreRight').textContent = score[1];
-}
+function updateScoresUI() { $('scoreLeft').textContent = score[0]; $('scoreRight').textContent = score[1]; }
 function updateMineCount() {
   let cnt = MINES;
   for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) if (flags[r][c]) cnt--;
@@ -1115,6 +1021,7 @@ function copyLink() {
   navigator.clipboard.writeText(url).then(() => showToast('✅ คัดลอกลิงก์แล้ว!', 'info')).catch(() => {});
 }
 function resetGame() {
+  restartMusic();
   if (isSolo) {
     initLocal(null, null, [0,0], 0, true);
     renderBoard();
